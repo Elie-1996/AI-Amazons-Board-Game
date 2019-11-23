@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using UnityEngine;
 
 public enum Piece
 {
@@ -27,7 +29,7 @@ public class GameBoardInformation
     }
 
     /* initializes an empty Board */
-    public GameBoardInformation(int rows, int columns)
+    public GameBoardInformation(int rows, int columns, List<Vector2> WhiteQueens, List<Vector2> BlackQueens)
     {
         if (rows <= 0 || columns <= 0)
         {
@@ -40,6 +42,16 @@ public class GameBoardInformation
             {
                 board[i, j] = Piece.EMPTY;
             }
+        }
+
+        foreach (Vector2 position in WhiteQueens)
+        {
+            board[(int)position.x, (int)position.y] = Piece.WHITEQUEEN;
+        }
+
+        foreach (Vector2 position in BlackQueens)
+        {
+            board[(int)position.x, (int)position.y] = Piece.BLACKQUEEN;
         }
     }
 

@@ -28,8 +28,18 @@ public class GameLogic : MonoBehaviour
         int rows = 10;
         int columns = 10;
 
-        info = new GameBoardInformation(rows, columns);
+        // TODO: WhiteQueens and BlackQueens should be input later on
+        List<Vector2> WhiteQueens = new List<Vector2>();
+        List<Vector2> BlackQueens = new List<Vector2>();
+        WhiteQueens.Add(new Vector2(0, 0));
+        WhiteQueens.Add(new Vector2(9, 9));
+        BlackQueens.Add(new Vector2(0, 9));
+        BlackQueens.Add(new Vector2(9, 0));
+
+
+        info = new GameBoardInformation(rows, columns, WhiteQueens, BlackQueens);
         generateAndPlaceTiles();
+        LoadTilePieces();
     }
 
     private void Update()
@@ -137,6 +147,19 @@ public class GameLogic : MonoBehaviour
                 newTile.AddComponent<BoxCollider>();
                 newTile.name = "Index (" + i + ", " + j + ")";
                 boardTiles[i, j] = newTile;
+            }
+        }
+    }
+
+    private void LoadTilePieces()
+    {
+        int rows = info.rows;
+        int columns = info.columns;
+        for (int i = 0; i < rows; ++i)
+        {
+            for (int j = 0; j < columns; ++j)
+            {
+                UpdateTileMaterial(i, j, info.getPieceAt(i, j));
             }
         }
     }
