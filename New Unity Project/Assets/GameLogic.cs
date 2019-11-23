@@ -49,7 +49,12 @@ public class GameLogic : MonoBehaviour
     // TODO: Should involve which piece to burn.
     private void movePiece(int i, int j, int destination_i, int destination_j)
     {
-        bool didMove = info.movePieceAndBurnLocation(i, j, destination_i, destination_j);
+        if (info.isMoveLegal(i, j, destination_i, destination_j) == false)
+        {
+            Debug.Log("Illegal move, Please make a legal move.");
+            return;
+        }
+        bool didMove = info.movePiece(i, j, destination_i, destination_j);
         if (didMove == false) return;
         UpdateTileMaterial(i, j, info.getPieceAt(i,j));
         UpdateTileMaterial(destination_i, destination_j, info.getPieceAt(destination_i, destination_j));

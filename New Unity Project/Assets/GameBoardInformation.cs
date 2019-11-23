@@ -60,7 +60,7 @@ public class GameBoardInformation
     }
 
     // TODO: Should involve which piece to burn.
-    public bool movePieceAndBurnLocation(int i, int j, int destination_i, int destination_j)
+    public bool movePiece(int i, int j, int destination_i, int destination_j)
     {
         exceptionIfIndicesAreOutOfBounds(i, j, "movePiece (i,j)");
         exceptionIfIndicesAreOutOfBounds(destination_i, destination_j, "movePiece (destination_i, destination_j)");
@@ -74,11 +74,31 @@ public class GameBoardInformation
         return true;
     }
 
-    private bool isMoveLegal(int i, int j, int destination_i, int destination_j)
+    public bool isMoveLegal(int i, int j, int destination_i, int destination_j)
     {
-        return isColumnMove(i, j, destination_i, destination_j) ||
-            isRowMove(i, j, destination_i, destination_j) ||
-            isDiagonalMove(i, j, destination_i, destination_j);
+        if (isColumnMove(i, j, destination_i, destination_j) == false &&
+            isRowMove(i, j, destination_i, destination_j) == false &&
+            isDiagonalMove(i, j, destination_i, destination_j) == false)
+            return false;
+        if (isMoveBlocked(i, j, destination_i, destination_j) == true) return false;
+        return true;
+    }
+
+    private bool isMoveBlocked(int i, int j, int destination_i, int destination_j)
+    {
+        int i_sign = 1;
+        if (i == destination_i) { i_sign = 0; }
+        else if (i > destination_i) { i_sign = -1; }
+        int j_sign = 1;
+        if (j == destination_j) { j_sign = 0; }
+        else if (j > destination_j) { j_sign = -1; }
+        while (i != destination_i || j != destination_j)
+        {
+            if (board[i, j] == Piece.DESTROYEDTILE) return true;
+            i += i_sign;
+            j += j_sign;
+        }
+        return false;
     }
 
     private bool isColumnMove(int i, int j, int destination_i, int destination_j)
