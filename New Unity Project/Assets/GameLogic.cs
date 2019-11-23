@@ -44,6 +44,11 @@ public class GameLogic : MonoBehaviour
 
     private void Update()
     {
+        OnMouseClick();
+    }
+
+    private void OnMouseClick()
+    {
         if (Input.GetMouseButtonDown(0))
         {
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
