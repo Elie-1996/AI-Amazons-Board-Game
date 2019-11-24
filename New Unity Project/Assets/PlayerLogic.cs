@@ -24,7 +24,8 @@ public class PlayerLogic: MonoBehaviour
     // the following variables will be used to allow to use 'Burn'.
     private Indices selectedIndices;
 
-    public PlayerLogic()
+    // PlayerLogic must NOT have a default constructor.
+    public PlayerLogic(int x)
     {
         playerTurnIndex = totalPlayers++;
         selectedIndices = null;
@@ -48,10 +49,8 @@ public class PlayerLogic: MonoBehaviour
         {
             yield return new WaitUntil(()=>playerTurnIndex == globalTurn); // only play when it is the current player's turn
             StartCoroutine(MakeMove()); // This is where the player will actually perform the move.
-            Debug.Log("Player " + playerTurnIndex + ", waiting..."); // This is to help debug the logic, imitiating player "makemove" time
             yield return new WaitUntil(() => finishedMove == true);
             finishedMove = false; // resets to false, to allow the player to play again
-            Debug.Log("Increasing globalTurn");
             globalTurn = (globalTurn + 1) % 2; // increase index to say that it is the other player's turn
             yield return PlayTurn();
         }
@@ -65,23 +64,19 @@ public class PlayerLogic: MonoBehaviour
         int queen_i = selectedIndices.i;
         int queen_j = selectedIndices.j;
         selectedIndices = null;
-
         // wait until select move location
         yield return new WaitUntil(() => selectedIndices != null);
         int destination_i = selectedIndices.i;
         int destination_j = selectedIndices.j;
         selectedIndices = null;
-
+        
         // move the queen
         MovePiece(queen_i, queen_j, destination_i, destination_j);
-
-
         // wait until select burn location
         yield return new WaitUntil(() => selectedIndices != null);
         int burn_i = selectedIndices.i;
         int burn_j = selectedIndices.j;
         selectedIndices = null;
-
         BurnPiece(destination_i, destination_j, burn_i, burn_j);
         finishedMove = true;
     }

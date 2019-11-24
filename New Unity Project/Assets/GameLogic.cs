@@ -37,11 +37,10 @@ public class GameLogic : MonoBehaviour
         WhiteQueens.Add(new Vector2(rows - 1, columns - 1));
         BlackQueens.Add(new Vector2(0, columns - 1));
         BlackQueens.Add(new Vector2(rows - 1, 0));
-
         GameBoardInformation.InitializeBoard(rows, columns, WhiteQueens, BlackQueens);
         generateAndPlaceTiles();
-        player1 = new PlayerLogic();
-        player2 = new PlayerLogic();
+        player1 = gameObject.AddComponent<PlayerLogic>(); // initializing player1
+        player2 = gameObject.AddComponent<PlayerLogic>(); // initializing player2
         StartCoroutine(Play());
     }
     
@@ -65,7 +64,21 @@ public class GameLogic : MonoBehaviour
     private void Update()
     {
         UpdateTilesUI();
+        UpdatePlayerSelection();
+    }
+
+    private void UpdatePlayerSelection()
+    {
         GetTileClicked(out int i, out int j);
+        if (i == -1 && j == -1) return;
+        if (PlayerLogic.globalTurn == (int)Piece.WHITEQUEEN)
+        {
+            player1.SelectIndices(i, j);
+        }
+        else
+        {
+            player2.SelectIndices(i, j);
+        }
     }
 
     private void UpdateTilesUI()
@@ -81,8 +94,7 @@ public class GameLogic : MonoBehaviour
     }
 
 
-    // TODO: return the Tile Clicked
-    // TODO: Is this function even needed?
+    // TODO: return the indices of clicked Tile
     private void GetTileClicked(out int i, out int j)
     {
         i = -1; j = -1;
@@ -108,20 +120,6 @@ public class GameLogic : MonoBehaviour
         int start_2 = name.IndexOf(',') + 1;
         int end_2 = name.IndexOf(')') - 1;
         j = int.Parse(name.Substring(start_2, end_2 - start_2 + 1));
-    }
-
-    // TODO: Should involve which piece to burn.
-    private void movePiece(int i, int j, int destination_i, int destination_j)
-    {
-        if (GameBoardInformation.isMoveLegal(i, j, destination_i, destination_j) == false)
-        {
-            Debug.Log("Illegal move, Please make a legal move.");
-            return;
-        }
-        bool didMove = GameBoardInformation.movePiece(i, j, destination_i, destination_j);
-        if (didMove == false) return;
-        UpdateTileMaterial(i, j, GameBoardInformation.getPieceAt(i,j));
-        UpdateTileMaterial(destination_i, destination_j, GameBoardInformation.getPieceAt(destination_i, destination_j));
     }
 
     private void UpdateTileMaterial(int i, int j, Piece piece)
@@ -165,7 +163,7 @@ public class GameLogic : MonoBehaviour
                     break;
             }
         }
-
+        
         boardUITiles[i, j].GetComponent<Renderer>().material = updatedMaterial;
         if (updatedMaterial == null)
         {

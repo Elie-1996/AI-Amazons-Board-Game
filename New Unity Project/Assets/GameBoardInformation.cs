@@ -101,8 +101,8 @@ public static class GameBoardInformation
         exceptionIfIndicesAreOutOfBounds(destination_i, destination_j, "movePiece (destination_i, destination_j)");
         if (i == destination_i && j == destination_j) { return false; }
         if (hasMovablePiece(i, j) == false) { return false; }
-        if (isMoveLegal(i, j, destination_i, destination_j)) { return false; }
-        
+        if (isMoveLegal(i, j, destination_i, destination_j) == false) { return false; }
+
         Piece piece = board[i, j];
         changeBoardIndices(i, j, Piece.EMPTY);
         changeBoardIndices(destination_i, destination_j, piece);
@@ -114,7 +114,7 @@ public static class GameBoardInformation
         exceptionIfIndicesAreOutOfBounds(queen_i, queen_j, "burnPiece (i,j)");
         exceptionIfIndicesAreOutOfBounds(burn_i, burn_j, "burnPiece (destination_i, destination_j)");
         if (isMoveLegal(queen_i, queen_j, burn_i, burn_j) == false) { return false; }
-        board[burn_i, burn_j] = Piece.DESTROYEDTILE;
+        changeBoardIndices(burn_i, burn_j, Piece.DESTROYEDTILE);
         return true;
     }
 
@@ -139,14 +139,16 @@ public static class GameBoardInformation
         int i_sign = 1;
         if (i == destination_i) { i_sign = 0; }
         else if (i > destination_i) { i_sign = -1; }
+
         int j_sign = 1;
         if (j == destination_j) { j_sign = 0; }
         else if (j > destination_j) { j_sign = -1; }
+        
         while (i != destination_i || j != destination_j)
         {
-            if (board[i, j] != Piece.EMPTY) return true;
             i += i_sign;
             j += j_sign;
+            if (board[i, j] != Piece.EMPTY) return true;
         }
         return false;
     }
