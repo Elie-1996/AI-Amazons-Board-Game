@@ -83,7 +83,7 @@ public class GameLogic : MonoBehaviour
 
     private void UpdateTilesUI()
     {
-        if (GameBoardInformation.UIUpdatesQueue.Count > 0) // if the queue isn't empty, O(1) operation
+        while (GameBoardInformation.UIUpdatesQueue.Count > 0) // if the queue isn't empty, O(1) operation
         {
             UpdatedTile changes = GameBoardInformation.UIUpdatesQueue.Dequeue();
             int i = changes.i;
