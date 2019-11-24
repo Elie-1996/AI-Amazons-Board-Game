@@ -24,8 +24,8 @@ public class PlayerLogic: MonoBehaviour
     // the following variables will be used to allow to use 'Burn'.
     private Indices selectedIndices;
 
-    // PlayerLogic must NOT have a default constructor.
-    public PlayerLogic(int x)
+    // Player Logic MUST HAVE ONLY Default constructor.
+    public PlayerLogic()
     {
         playerTurnIndex = totalPlayers++;
         selectedIndices = null;
@@ -43,7 +43,7 @@ public class PlayerLogic: MonoBehaviour
     {
         if (GameBoardInformation.isGameOver == true)
         {
-            yield return null;
+            yield break;
         }
         else
         {
@@ -60,24 +60,49 @@ public class PlayerLogic: MonoBehaviour
     private IEnumerator MakeMove()
     {
         // wait until select the queen
+        Debug.Log("Player " + playerTurnIndex + ", Please Select Queen");
         yield return new WaitUntil(() => selectedIndices != null);
         int queen_i = selectedIndices.i;
         int queen_j = selectedIndices.j;
         selectedIndices = null;
+
+        if ((int)GameBoardInformation.getPieceAt(queen_i, queen_j) != playerTurnIndex)
+        {
+            Debug.Log("Player " + playerTurnIndex + ", Inappropriate QUEEN Tile");
+            yield return MakeMove();
+            yield break;
+        }
+
         // wait until select move location
+        Debug.Log("Player " + playerTurnIndex + ", Please Select Move Location");
         yield return new WaitUntil(() => selectedIndices != null);
         int destination_i = selectedIndices.i;
         int destination_j = selectedIndices.j;
         selectedIndices = null;
         
         // move the queen
-        MovePiece(queen_i, queen_j, destination_i, destination_j);
+        bool didMove = MovePiece(queen_i, queen_j, destination_i, destination_j);
+        if (didMove == false)
+        {
+            Debug.Log("Player " + playerTurnIndex + ", Inappropriate MOVE Tile");
+            yield return MakeMove();
+            yield break;
+        }
+
         // wait until select burn location
         yield return new WaitUntil(() => selectedIndices != null);
         int burn_i = selectedIndices.i;
         int burn_j = selectedIndices.j;
         selectedIndices = null;
-        BurnPiece(destination_i, destination_j, burn_i, burn_j);
+
+        bool didBurn = BurnPiece(destination_i, destination_j, burn_i, burn_j);
+        if (didBurn == false)
+        {
+            Debug.Log("Player " + playerTurnIndex + ", Inappropriate BURN Tile");
+            MovePiece(destination_i, destination_j, queen_i, queen_j); // reset the damage done
+            yield return MakeMove();
+            yield break;
+        }
         finishedMove = true;
     }
 
