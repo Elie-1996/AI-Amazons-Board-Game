@@ -4,10 +4,10 @@ using UnityEngine;
 
 public enum Piece
 {
-    WHITEQUEEN,
-    BLACKQUEEN,
-    DESTROYEDTILE,
-    EMPTY
+    WHITEQUEEN = 0, // white queen must be 0
+    BLACKQUEEN = 1, // black queen must be 1
+    DESTROYEDTILE = 2,
+    EMPTY = 3
 }
 
 public enum MaterialIntensity
@@ -16,11 +16,25 @@ public enum MaterialIntensity
     DARK
 }
 
+// This class will hold information on which Tiles to update
+public class UpdatedTile
+{
+    public readonly int i, j;
+    public readonly Piece piece;
+    public UpdatedTile(int _i, int _j, Piece _piece)
+    {
+        i = _i;
+        j = _j;
+        piece = _piece;
+    }
+}
+
 public static class GameBoardInformation
 {
     public static bool isGameOver = false;
     public static bool playAgain = false;
     private static Piece[,] board;
+    public static Queue<UpdatedTile> UIUpdatesQueue; // The elements should only be removed in UI, should only be increased in this class.
     public static int rows
     {
         get => board.GetLength(0);
@@ -34,11 +48,13 @@ public static class GameBoardInformation
     {
         Debug.LogError("Please Implement GameBoardInformation reset!");
         // TODO: Missing Implementation
+        // TODO: Please delete (or check if needed) to delete Queue memory.
     }
 
     /* initializes an empty Board */
     public static void InitializeBoard(int rows, int columns, List<Vector2> WhiteQueens, List<Vector2> BlackQueens)
     {
+        UIUpdatesQueue = new Queue<UpdatedTile>();
         if (rows <= 0 || columns <= 0)
         {
             throw new Exception("Could not initialize GameBoardInformation, rows and columns must be positive integers.");
@@ -48,18 +64,18 @@ public static class GameBoardInformation
         {
             for (int j = 0; j < columns; ++j)
             {
-                board[i, j] = Piece.EMPTY;
+                changeBoardIndices(i, j, Piece.EMPTY);
             }
         }
 
         foreach (Vector2 position in WhiteQueens)
         {
-            board[(int)position.x, (int)position.y] = Piece.WHITEQUEEN;
+            changeBoardIndices((int)position.x, (int)position.y, Piece.WHITEQUEEN);
         }
 
         foreach (Vector2 position in BlackQueens)
         {
-            board[(int)position.x, (int)position.y] = Piece.BLACKQUEEN;
+            changeBoardIndices((int)position.x, (int)position.y, Piece.BLACKQUEEN);
         }
     }
 
@@ -79,7 +95,6 @@ public static class GameBoardInformation
         return board[i, j];
     }
 
-    // TODO: Should involve which piece to burn.
     public static bool movePiece(int i, int j, int destination_i, int destination_j)
     {
         exceptionIfIndicesAreOutOfBounds(i, j, "movePiece (i,j)");
@@ -89,9 +104,24 @@ public static class GameBoardInformation
         if (isMoveLegal(i, j, destination_i, destination_j)) { return false; }
         
         Piece piece = board[i, j];
-        board[i, j] = Piece.EMPTY;
-        board[destination_i, destination_j] = piece;
+        changeBoardIndices(i, j, Piece.EMPTY);
+        changeBoardIndices(destination_i, destination_j, piece);
         return true;
+    }
+
+    public static bool burnPiece(int queen_i, int queen_j, int burn_i, int burn_j)
+    {
+        exceptionIfIndicesAreOutOfBounds(queen_i, queen_j, "burnPiece (i,j)");
+        exceptionIfIndicesAreOutOfBounds(burn_i, burn_j, "burnPiece (destination_i, destination_j)");
+        if (isMoveLegal(queen_i, queen_j, burn_i, burn_j) == false) { return false; }
+        board[burn_i, burn_j] = Piece.DESTROYEDTILE;
+        return true;
+    }
+
+    private static void changeBoardIndices(int i, int j, Piece piece)
+    {
+        board[i, j] = piece;
+        UIUpdatesQueue.Enqueue(new UpdatedTile(i, j, piece));
     }
 
     public static bool isMoveLegal(int i, int j, int destination_i, int destination_j)
@@ -114,7 +144,7 @@ public static class GameBoardInformation
         else if (j > destination_j) { j_sign = -1; }
         while (i != destination_i || j != destination_j)
         {
-            if (board[i, j] == Piece.DESTROYEDTILE) return true;
+            if (board[i, j] != Piece.EMPTY) return true;
             i += i_sign;
             j += j_sign;
         }
@@ -136,10 +166,15 @@ public static class GameBoardInformation
         return Math.Abs(i - destination_i) == Math.Abs(j - destination_j);
     }
 
+    // Note: This function considers whose turn it is to move pieces.
     private static bool hasMovablePiece(int i, int j)
     {
         exceptionIfIndicesAreOutOfBounds(i, j, "hasMovablePiece");
-        return board[i, j] == Piece.WHITEQUEEN || board[i, j] == Piece.BLACKQUEEN;
+        if (PlayerLogic.globalTurn == (int)Piece.WHITEQUEEN)
+        {
+            return board[i, j] == Piece.WHITEQUEEN;
+        }
+        return board[i, j] == Piece.BLACKQUEEN;
     }
 
     // checks if [0,0] <= [i,j] < [m, n] 

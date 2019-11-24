@@ -17,7 +17,7 @@ public class GameLogic : MonoBehaviour
     public Material DarkTileWhiteQueen;
     public Material LightTileWhiteQueen;
     
-    private GameObject[,] boardTiles;
+    private GameObject[,] boardUITiles; // holds the visible GUI tiles.
     private const float estimatedTileCameraSize = 0.6f;
 
     private PlayerLogic player1;
@@ -34,67 +34,73 @@ public class GameLogic : MonoBehaviour
         List<Vector2> WhiteQueens = new List<Vector2>();
         List<Vector2> BlackQueens = new List<Vector2>();
         WhiteQueens.Add(new Vector2(0, 0));
-        WhiteQueens.Add(new Vector2(9, 9));
-        BlackQueens.Add(new Vector2(0, 9));
-        BlackQueens.Add(new Vector2(9, 0));
+        WhiteQueens.Add(new Vector2(rows - 1, columns - 1));
+        BlackQueens.Add(new Vector2(0, columns - 1));
+        BlackQueens.Add(new Vector2(rows - 1, 0));
 
         GameBoardInformation.InitializeBoard(rows, columns, WhiteQueens, BlackQueens);
         generateAndPlaceTiles();
-        LoadTilePieces();
         player1 = new PlayerLogic();
         player2 = new PlayerLogic();
         StartCoroutine(Play());
     }
-
-    //bool isBlackQueensPlaying = true;
     
     IEnumerator Play()
     {
-        Debug.Log("player0..................");
         StartCoroutine(player1.PlayTurn());
-        Debug.Log("player1..................");
         StartCoroutine(player2.PlayTurn());
         yield return new WaitUntil(() => GameBoardInformation.playAgain == true);
-        GameBoardInformation.playAgain = false;
-        PlayerLogic.reset();
-        GameBoardInformation.reset(); // TODO: Do not forget to implement reset!
+        resetGame(); // TODO: Complete implementation
         yield return Play();
     }
 
-    private void Update()
+    private void resetGame()
     {
-
-        //if (Input.GetMouseButtonDown(0))
-        //{
-        //    Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        //    RaycastHit hit;
-
-        //    if (Physics.Raycast(ray, out hit, 100))
-        //    {
-        //        GameObject clickedTile = hit.transform.gameObject;
-        //        Debug.Log(clickedTile.name);
-        //        //if (isTileClickable(clickedTile, out int i, out int j))
-        //        //{
-
-        //        //}
-        //    }
-        //}
+        GameBoardInformation.playAgain = false;
+        PlayerLogic.reset();
+        GameBoardInformation.reset(); // TODO: Do not forget to implement reset!
     }
 
-    //private bool isTileClickable(GameObject Tile, out int i, out int j)
-    //{
-    //    TileIndices(Tile, out i, out j);
-    //    if (isBlackQueensPlaying)
-    //    {
-    //        return GameBoardInformation.getPieceAt(i, j) == Piece.BLACKQUEEN;
-    //    }
-    //    return GameBoardInformation.getPieceAt(i, j) == Piece.WHITEQUEEN;
-    //}
 
-    // TODO: The cut indices could be highly inaccurate, and cause exceptions to be thrown.
-    private void TileIndices(GameObject Tile, out int i, out int j)
+    private void Update()
     {
-        string name = Tile.name;
+        UpdateTilesUI();
+        GetTileClicked(out int i, out int j);
+    }
+
+    private void UpdateTilesUI()
+    {
+        if (GameBoardInformation.UIUpdatesQueue.Count > 0) // if the queue isn't empty, O(1) operation
+        {
+            UpdatedTile changes = GameBoardInformation.UIUpdatesQueue.Dequeue();
+            int i = changes.i;
+            int j = changes.j;
+            Piece newPiece = changes.piece;
+            UpdateTileMaterial(i, j, newPiece);
+        }
+    }
+
+
+    // TODO: return the Tile Clicked
+    // TODO: Is this function even needed?
+    private void GetTileClicked(out int i, out int j)
+    {
+        i = -1; j = -1;
+        if (Input.GetMouseButtonDown(0))
+        {
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            RaycastHit hit;
+
+            if (Physics.Raycast(ray, out hit, 100))
+            {
+                GameObject clickedTile = hit.transform.gameObject;
+                TileIndices(clickedTile.name, out i, out j);
+            }
+        }
+    }
+
+    private void TileIndices(string name, out int i, out int j)
+    {
         int start_1 = name.IndexOf('(') + 1;
         int end_1 = name.IndexOf(',') - 1;
         i = int.Parse(name.Substring(start_1, end_1 - start_1 + 1));
@@ -160,7 +166,7 @@ public class GameLogic : MonoBehaviour
             }
         }
 
-        boardTiles[i, j].GetComponent<Renderer>().material = updatedMaterial;
+        boardUITiles[i, j].GetComponent<Renderer>().material = updatedMaterial;
         if (updatedMaterial == null)
         {
             Debug.LogError("GameLogic.cs, updateTileMaterial: updatedMaterial is null.");
@@ -171,7 +177,7 @@ public class GameLogic : MonoBehaviour
     {
         int rows = GameBoardInformation.rows;
         int columns = GameBoardInformation.columns;
-        boardTiles = new GameObject[rows, columns];
+        boardUITiles = new GameObject[rows, columns];
 
         int maximum = rows > columns ? rows : columns;
         Vector3 cameraPosition = new Vector3(rows / 2.0f, -columns / 2.0f, -10.0f);
@@ -194,20 +200,7 @@ public class GameLogic : MonoBehaviour
                 }
                 newTile.AddComponent<BoxCollider>();
                 newTile.name = "Index (" + i + ", " + j + ")";
-                boardTiles[i, j] = newTile;
-            }
-        }
-    }
-
-    private void LoadTilePieces()
-    {
-        int rows = GameBoardInformation.rows;
-        int columns = GameBoardInformation.columns;
-        for (int i = 0; i < rows; ++i)
-        {
-            for (int j = 0; j < columns; ++j)
-            {
-                UpdateTileMaterial(i, j, GameBoardInformation.getPieceAt(i, j));
+                boardUITiles[i, j] = newTile;
             }
         }
     }
