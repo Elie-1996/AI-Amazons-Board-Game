@@ -16,10 +16,12 @@ public class GameLogic : MonoBehaviour
     public Material LightTileBlackQueen;
     public Material DarkTileWhiteQueen;
     public Material LightTileWhiteQueen;
-
-    private GameBoardInformation info;
+    
     private GameObject[,] boardTiles;
     private const float estimatedTileCameraSize = 0.6f;
+
+    private PlayerLogic player1;
+    private PlayerLogic player2;
 
     // Start is executed once
     void Start()
@@ -36,48 +38,89 @@ public class GameLogic : MonoBehaviour
         BlackQueens.Add(new Vector2(0, 9));
         BlackQueens.Add(new Vector2(9, 0));
 
-
-        info = new GameBoardInformation(rows, columns, WhiteQueens, BlackQueens);
+        GameBoardInformation.InitializeBoard(rows, columns, WhiteQueens, BlackQueens);
         generateAndPlaceTiles();
         LoadTilePieces();
+        player1 = new PlayerLogic();
+        player2 = new PlayerLogic();
+        StartCoroutine(Play());
+    }
+
+    //bool isBlackQueensPlaying = true;
+    
+    IEnumerator Play()
+    {
+        Debug.Log("player0..................");
+        StartCoroutine(player1.PlayTurn());
+        Debug.Log("player1..................");
+        StartCoroutine(player2.PlayTurn());
+        yield return new WaitUntil(() => GameBoardInformation.playAgain == true);
+        GameBoardInformation.playAgain = false;
+        PlayerLogic.reset();
+        GameBoardInformation.reset(); // TODO: Do not forget to implement reset!
+        yield return Play();
     }
 
     private void Update()
     {
-        OnMouseClick();
+
+        //if (Input.GetMouseButtonDown(0))
+        //{
+        //    Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        //    RaycastHit hit;
+
+        //    if (Physics.Raycast(ray, out hit, 100))
+        //    {
+        //        GameObject clickedTile = hit.transform.gameObject;
+        //        Debug.Log(clickedTile.name);
+        //        //if (isTileClickable(clickedTile, out int i, out int j))
+        //        //{
+
+        //        //}
+        //    }
+        //}
     }
 
-    private void OnMouseClick()
-    {
-        if (Input.GetMouseButtonDown(0))
-        {
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            RaycastHit hit;
+    //private bool isTileClickable(GameObject Tile, out int i, out int j)
+    //{
+    //    TileIndices(Tile, out i, out j);
+    //    if (isBlackQueensPlaying)
+    //    {
+    //        return GameBoardInformation.getPieceAt(i, j) == Piece.BLACKQUEEN;
+    //    }
+    //    return GameBoardInformation.getPieceAt(i, j) == Piece.WHITEQUEEN;
+    //}
 
-            if (Physics.Raycast(ray, out hit, 100))
-            {
-                Debug.Log(hit.transform.gameObject.name);
-            }
-        }
+    // TODO: The cut indices could be highly inaccurate, and cause exceptions to be thrown.
+    private void TileIndices(GameObject Tile, out int i, out int j)
+    {
+        string name = Tile.name;
+        int start_1 = name.IndexOf('(') + 1;
+        int end_1 = name.IndexOf(',') - 1;
+        i = int.Parse(name.Substring(start_1, end_1 - start_1 + 1));
+
+        int start_2 = name.IndexOf(',') + 1;
+        int end_2 = name.IndexOf(')') - 1;
+        j = int.Parse(name.Substring(start_2, end_2 - start_2 + 1));
     }
 
     // TODO: Should involve which piece to burn.
     private void movePiece(int i, int j, int destination_i, int destination_j)
     {
-        if (info.isMoveLegal(i, j, destination_i, destination_j) == false)
+        if (GameBoardInformation.isMoveLegal(i, j, destination_i, destination_j) == false)
         {
             Debug.Log("Illegal move, Please make a legal move.");
             return;
         }
-        bool didMove = info.movePiece(i, j, destination_i, destination_j);
+        bool didMove = GameBoardInformation.movePiece(i, j, destination_i, destination_j);
         if (didMove == false) return;
-        UpdateTileMaterial(i, j, info.getPieceAt(i,j));
-        UpdateTileMaterial(destination_i, destination_j, info.getPieceAt(destination_i, destination_j));
+        UpdateTileMaterial(i, j, GameBoardInformation.getPieceAt(i,j));
+        UpdateTileMaterial(destination_i, destination_j, GameBoardInformation.getPieceAt(destination_i, destination_j));
     }
 
     private void UpdateTileMaterial(int i, int j, Piece piece)
     {
-        MaterialIntensity intensity = info.getPieceIntensity(i, j);
+        MaterialIntensity intensity = GameBoardInformation.getPieceIntensity(i, j);
 
         Material updatedMaterial = null;
         if (intensity == MaterialIntensity.DARK)
@@ -126,8 +169,8 @@ public class GameLogic : MonoBehaviour
 
     private void generateAndPlaceTiles()
     {
-        int rows = info.rows;
-        int columns = info.columns;
+        int rows = GameBoardInformation.rows;
+        int columns = GameBoardInformation.columns;
         boardTiles = new GameObject[rows, columns];
 
         int maximum = rows > columns ? rows : columns;
@@ -141,7 +184,7 @@ public class GameLogic : MonoBehaviour
             {
                 GameObject newTile;
                 Vector3 tilePosition = new Vector3(i, -j, 0.0f);
-                if (info.getPieceIntensity(i, j) == MaterialIntensity.DARK)
+                if (GameBoardInformation.getPieceIntensity(i, j) == MaterialIntensity.DARK)
                 {   
                     newTile = Instantiate(DarkTilePrefab, tilePosition, Quaternion.identity, transform);
                 }
@@ -158,13 +201,13 @@ public class GameLogic : MonoBehaviour
 
     private void LoadTilePieces()
     {
-        int rows = info.rows;
-        int columns = info.columns;
+        int rows = GameBoardInformation.rows;
+        int columns = GameBoardInformation.columns;
         for (int i = 0; i < rows; ++i)
         {
             for (int j = 0; j < columns; ++j)
             {
-                UpdateTileMaterial(i, j, info.getPieceAt(i, j));
+                UpdateTileMaterial(i, j, GameBoardInformation.getPieceAt(i, j));
             }
         }
     }

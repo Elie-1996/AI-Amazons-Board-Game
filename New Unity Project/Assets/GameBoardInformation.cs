@@ -16,20 +16,28 @@ public enum MaterialIntensity
     DARK
 }
 
-public class GameBoardInformation
+public static class GameBoardInformation
 {
-    private Piece[,] board;
-    public int rows
+    public static bool isGameOver = false;
+    public static bool playAgain = false;
+    private static Piece[,] board;
+    public static int rows
     {
         get => board.GetLength(0);
     }
-    public int columns
+    public static int columns
     {
         get => board.GetLength(1);
     }
 
+    public static void reset()
+    {
+        Debug.LogError("Please Implement GameBoardInformation reset!");
+        // TODO: Missing Implementation
+    }
+
     /* initializes an empty Board */
-    public GameBoardInformation(int rows, int columns, List<Vector2> WhiteQueens, List<Vector2> BlackQueens)
+    public static void InitializeBoard(int rows, int columns, List<Vector2> WhiteQueens, List<Vector2> BlackQueens)
     {
         if (rows <= 0 || columns <= 0)
         {
@@ -55,7 +63,7 @@ public class GameBoardInformation
         }
     }
 
-    public MaterialIntensity getPieceIntensity(int i, int j)
+    public static MaterialIntensity getPieceIntensity(int i, int j)
     {
         exceptionIfIndicesAreOutOfBounds(i, j, "getPieceIntensity");
         if (i % 2 == 0)
@@ -65,14 +73,14 @@ public class GameBoardInformation
         return j % 2 == 0 ? MaterialIntensity.LIGHT : MaterialIntensity.DARK;
     }
 
-    public Piece getPieceAt(int i, int j)
+    public static Piece getPieceAt(int i, int j)
     {
         exceptionIfIndicesAreOutOfBounds(i, j, "getPieceAt");
         return board[i, j];
     }
 
     // TODO: Should involve which piece to burn.
-    public bool movePiece(int i, int j, int destination_i, int destination_j)
+    public static bool movePiece(int i, int j, int destination_i, int destination_j)
     {
         exceptionIfIndicesAreOutOfBounds(i, j, "movePiece (i,j)");
         exceptionIfIndicesAreOutOfBounds(destination_i, destination_j, "movePiece (destination_i, destination_j)");
@@ -86,7 +94,7 @@ public class GameBoardInformation
         return true;
     }
 
-    public bool isMoveLegal(int i, int j, int destination_i, int destination_j)
+    public static bool isMoveLegal(int i, int j, int destination_i, int destination_j)
     {
         if (isColumnMove(i, j, destination_i, destination_j) == false &&
             isRowMove(i, j, destination_i, destination_j) == false &&
@@ -96,7 +104,7 @@ public class GameBoardInformation
         return true;
     }
 
-    private bool isMoveBlocked(int i, int j, int destination_i, int destination_j)
+    private static bool isMoveBlocked(int i, int j, int destination_i, int destination_j)
     {
         int i_sign = 1;
         if (i == destination_i) { i_sign = 0; }
@@ -113,29 +121,29 @@ public class GameBoardInformation
         return false;
     }
 
-    private bool isColumnMove(int i, int j, int destination_i, int destination_j)
+    private static bool isColumnMove(int i, int j, int destination_i, int destination_j)
     {
         return i == destination_i;
     }
 
-    private bool isRowMove(int i, int j, int destination_i, int destination_j)
+    private static bool isRowMove(int i, int j, int destination_i, int destination_j)
     {
         return j == destination_j;
     }
 
-    private bool isDiagonalMove(int i, int j, int destination_i, int destination_j)
+    private static bool isDiagonalMove(int i, int j, int destination_i, int destination_j)
     {
         return Math.Abs(i - destination_i) == Math.Abs(j - destination_j);
     }
 
-    private bool hasMovablePiece(int i, int j)
+    private static bool hasMovablePiece(int i, int j)
     {
         exceptionIfIndicesAreOutOfBounds(i, j, "hasMovablePiece");
         return board[i, j] == Piece.WHITEQUEEN || board[i, j] == Piece.BLACKQUEEN;
     }
 
     // checks if [0,0] <= [i,j] < [m, n] 
-    private void exceptionIfIndicesAreOutOfBounds(int i, int j, string source)
+    private static void exceptionIfIndicesAreOutOfBounds(int i, int j, string source)
     {
         if (i >= rows || i < 0 || j < 0 || j > columns)
         {
