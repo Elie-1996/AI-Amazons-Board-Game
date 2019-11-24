@@ -56,7 +56,7 @@ public class PlayerLogic: MonoBehaviour
         }
     }
 
-    // TODO: Missing check if the correct indices were chosen!
+    // Note: This function is NOT recursive.
     private IEnumerator MakeMove()
     {
         // wait until select the queen
@@ -66,6 +66,7 @@ public class PlayerLogic: MonoBehaviour
         int queen_j = selectedIndices.j;
         selectedIndices = null;
 
+        // check if player selected a correct queen.
         if ((int)GameBoardInformation.getPieceAt(queen_i, queen_j) != playerTurnIndex)
         {
             Debug.Log("Player " + playerTurnIndex + ", Inappropriate QUEEN Tile");
