@@ -90,6 +90,7 @@ public class PlayerLogic: MonoBehaviour
         }
 
         // wait until select burn location
+        Debug.Log("Player " + playerTurnIndex + ", Please Select BURN Location");
         yield return new WaitUntil(() => selectedIndices != null);
         int burn_i = selectedIndices.i;
         int burn_j = selectedIndices.j;
