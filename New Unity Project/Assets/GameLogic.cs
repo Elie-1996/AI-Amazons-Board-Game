@@ -94,7 +94,7 @@ public class GameLogic : MonoBehaviour
     }
 
 
-    // TODO: return the indices of clicked Tile
+    // returns the indices of clicked Tile
     private void GetTileClicked(out int i, out int j)
     {
         i = -1; j = -1;
