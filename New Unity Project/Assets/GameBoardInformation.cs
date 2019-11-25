@@ -34,6 +34,9 @@ public static class GameBoardInformation
     public static bool isGameOver = false;
     public static bool playAgain = false;
     private static Piece[,] board;
+    private static Indices[] WhiteQueens;
+    private static Indices[] BlackQueens;
+    private static Piece Winner;
     public static Queue<UpdatedTile> UIUpdatesQueue; // The elements should only be removed in UI, should only be increased in this class.
     public static int rows
     {
@@ -49,11 +52,15 @@ public static class GameBoardInformation
         Debug.LogError("Please Implement GameBoardInformation reset!");
         // TODO: Missing Implementation
         // TODO: Please delete (or check if needed) to delete Queue memory.
+        // Winner = Piece.EMPTY;
     }
 
     /* initializes an empty Board */
-    public static void InitializeBoard(int rows, int columns, List<Vector2> WhiteQueens, List<Vector2> BlackQueens)
+    public static void InitializeBoard(int rows, int columns, List<Vector2> _WhiteQueens, List<Vector2> _BlackQueens)
     {
+        WhiteQueens = new Indices[_WhiteQueens.Count];
+        BlackQueens = new Indices[_BlackQueens.Count];
+        Winner = Piece.EMPTY;
         UIUpdatesQueue = new Queue<UpdatedTile>();
         if (rows <= 0 || columns <= 0)
         {
@@ -68,14 +75,22 @@ public static class GameBoardInformation
             }
         }
 
-        foreach (Vector2 position in WhiteQueens)
+        int white_queen_i = 0;
+        foreach (Vector2 position in _WhiteQueens)
         {
-            changeBoardIndices((int)position.x, (int)position.y, Piece.WHITEQUEEN);
+            int x = (int)position.x;
+            int y = (int)position.y;
+            changeBoardIndices(x, y, Piece.WHITEQUEEN);
+            WhiteQueens[white_queen_i++] = new Indices(x, y);
         }
 
-        foreach (Vector2 position in BlackQueens)
+        int black_queen_i = 0;
+        foreach (Vector2 position in _BlackQueens)
         {
+            int x = (int)position.x;
+            int y = (int)position.y;
             changeBoardIndices((int)position.x, (int)position.y, Piece.BLACKQUEEN);
+            BlackQueens[black_queen_i++] = new Indices(x, y);
         }
     }
 
@@ -106,7 +121,34 @@ public static class GameBoardInformation
         Piece piece = board[i, j];
         changeBoardIndices(i, j, Piece.EMPTY);
         changeBoardIndices(destination_i, destination_j, piece);
+        UpdateQueenLocation(piece, i, j, destination_i, destination_j);
         return true;
+    }
+
+    private static void UpdateQueenLocation(Piece piece, int old_i, int old_j, int new_i, int new_j)
+    {
+        if (piece == Piece.BLACKQUEEN)
+        {
+            for (int i = 0; i < BlackQueens.Length; ++i)
+            {
+                if (BlackQueens[i].i == old_i && BlackQueens[i].j == old_j)
+                {
+                    BlackQueens[i] = new Indices(new_i, new_j);
+                    break;
+                }
+            }
+        }
+        else if (piece == Piece.WHITEQUEEN)
+        {
+            for (int i = 0; i < WhiteQueens.Length; ++i)
+            {
+                if (WhiteQueens[i].i == old_i && WhiteQueens[i].j == old_j)
+                {
+                    WhiteQueens[i] = new Indices(new_i, new_j);
+                    break;
+                }
+            }
+        }
     }
 
     public static bool burnPiece(int queen_i, int queen_j, int burn_i, int burn_j)
@@ -166,6 +208,64 @@ public static class GameBoardInformation
     private static bool isDiagonalMove(int i, int j, int destination_i, int destination_j)
     {
         return Math.Abs(i - destination_i) == Math.Abs(j - destination_j);
+    }
+
+    public static void updateGameOver()
+    {
+        bool doesWhiteHaveFreeQueen = false;
+        foreach (Indices indices in WhiteQueens)
+        {
+            if (isQueenSurrounded(indices.i, indices.j) == false)
+            {
+                doesWhiteHaveFreeQueen = true;
+                break;
+            }
+        }
+
+        bool doesBlackHaveFreeQueen = false;
+        foreach (Indices indices in BlackQueens)
+        {
+            if (isQueenSurrounded(indices.i, indices.j) == false)
+            {
+                doesBlackHaveFreeQueen = true;
+            }
+        }
+
+        if (doesWhiteHaveFreeQueen == false || doesBlackHaveFreeQueen == false)
+        {
+            isGameOver = true;
+        }
+        if (isGameOver)
+        {
+            Winner = doesBlackHaveFreeQueen == true ? Piece.BLACKQUEEN : Piece.WHITEQUEEN;
+        }
+    }
+
+    public static Piece GetWinner()
+    {
+        return Winner;
+    }
+
+    // Note: Assumes that i,j is a queen
+    private static bool isQueenSurrounded(int i, int j)
+    {
+        for (int k = -1; k <= 1; ++k)
+        {
+            for (int m = -1; m <= 1; ++m)
+            {
+                if (isTileEmptyOrExistent(i + k, j + m))
+                {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    private static bool isTileEmptyOrExistent(int i, int j)
+    {
+        if (i < 0 || i >= rows || j < 0 || j >= columns) return false; // non-existent
+        return board[i, j] == Piece.EMPTY;
     }
 
     // Note: This function considers whose turn it is to move pieces.

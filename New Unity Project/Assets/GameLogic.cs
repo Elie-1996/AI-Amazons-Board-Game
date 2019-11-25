@@ -48,6 +48,8 @@ public class GameLogic : MonoBehaviour
     {
         StartCoroutine(player1.PlayTurn());
         StartCoroutine(player2.PlayTurn());
+        yield return new WaitUntil(() => GameBoardInformation.GetWinner() != Piece.EMPTY);
+        Debug.Log("Winner is = " + GameBoardInformation.GetWinner().ToString());
         yield return new WaitUntil(() => GameBoardInformation.playAgain == true);
         resetGame(); // TODO: Complete implementation
         yield return Play();

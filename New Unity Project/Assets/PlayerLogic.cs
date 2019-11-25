@@ -41,16 +41,17 @@ public class PlayerLogic: MonoBehaviour
     // This function should be called when we want this player to play
     public IEnumerator PlayTurn()
     {
+        yield return new WaitUntil(() => playerTurnIndex == globalTurn); // only play when it is the current player's turn
         if (GameBoardInformation.isGameOver == true)
         {
             yield break;
         }
         else
         {
-            yield return new WaitUntil(()=>playerTurnIndex == globalTurn); // only play when it is the current player's turn
             StartCoroutine(MakeMove()); // This is where the player will actually perform the move.
             yield return new WaitUntil(() => finishedMove == true);
             finishedMove = false; // resets to false, to allow the player to play again
+            GameBoardInformation.updateGameOver();
             globalTurn = (globalTurn + 1) % 2; // increase index to say that it is the other player's turn
             yield return PlayTurn();
         }
@@ -105,6 +106,7 @@ public class PlayerLogic: MonoBehaviour
             yield return MakeMove();
             yield break;
         }
+
         finishedMove = true;
     }
 
