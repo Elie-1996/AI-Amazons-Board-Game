@@ -56,7 +56,7 @@ public static class GameBoardInformation
     }
 
     /* initializes an empty Board */
-    public static void InitializeBoard(int rows, int columns, List<Vector2> _WhiteQueens, List<Vector2> _BlackQueens)
+    public static void InitializeBoard(int rows, int columns, List<Indices> _WhiteQueens, List<Indices> _BlackQueens)
     {
         WhiteQueens = new Indices[_WhiteQueens.Count];
         BlackQueens = new Indices[_BlackQueens.Count];
@@ -76,21 +76,17 @@ public static class GameBoardInformation
         }
 
         int white_queen_i = 0;
-        foreach (Vector2 position in _WhiteQueens)
+        foreach (Indices position in _WhiteQueens)
         {
-            int x = (int)position.x;
-            int y = (int)position.y;
-            changeBoardIndices(x, y, Piece.WHITEQUEEN);
-            WhiteQueens[white_queen_i++] = new Indices(x, y);
+            changeBoardIndices(position.i, position.j, Piece.WHITEQUEEN);
+            WhiteQueens[white_queen_i++] = position;
         }
 
         int black_queen_i = 0;
-        foreach (Vector2 position in _BlackQueens)
+        foreach (Indices position in _BlackQueens)
         {
-            int x = (int)position.x;
-            int y = (int)position.y;
-            changeBoardIndices((int)position.x, (int)position.y, Piece.BLACKQUEEN);
-            BlackQueens[black_queen_i++] = new Indices(x, y);
+            changeBoardIndices(position.i, position.j, Piece.BLACKQUEEN);
+            BlackQueens[black_queen_i++] = position;
         }
     }
 

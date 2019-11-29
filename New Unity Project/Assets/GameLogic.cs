@@ -18,7 +18,7 @@ public class GameLogic : MonoBehaviour
     public Material LightTileWhiteQueen;
     
     private GameObject[,] boardUITiles; // holds the visible GUI tiles.
-    private const float estimatedTileCameraSize = 0.6f;
+    private const float estimatedTileCameraSize = 0.65f;
 
     private PlayerLogic player1;
     private PlayerLogic player2;
@@ -27,16 +27,12 @@ public class GameLogic : MonoBehaviour
     void Start()
     {
         // TODO: rows and columns should be input later on
-        int rows = 10;
-        int columns = 10;
+        int rows = InitializingParameters.rows;
+        int columns = InitializingParameters.columns;
 
         // TODO: WhiteQueens and BlackQueens should be input later on
-        List<Vector2> WhiteQueens = new List<Vector2>();
-        List<Vector2> BlackQueens = new List<Vector2>();
-        WhiteQueens.Add(new Vector2(0, 0));
-        WhiteQueens.Add(new Vector2(rows - 1, columns - 1));
-        BlackQueens.Add(new Vector2(0, columns - 1));
-        BlackQueens.Add(new Vector2(rows - 1, 0));
+        List<Indices> WhiteQueens = InitializingParameters.WhiteQueens;
+        List<Indices> BlackQueens = InitializingParameters.BlackQueens;
         GameBoardInformation.InitializeBoard(rows, columns, WhiteQueens, BlackQueens);
         generateAndPlaceTiles();
         player1 = gameObject.AddComponent<PlayerLogic>(); // initializing player1
