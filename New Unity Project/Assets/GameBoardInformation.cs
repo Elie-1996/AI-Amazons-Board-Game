@@ -155,6 +155,7 @@ public static class GameBoardInformation
     {
         exceptionIfIndicesAreOutOfBounds(queen_i, queen_j, "burnPiece (i,j)");
         exceptionIfIndicesAreOutOfBounds(burn_i, burn_j, "burnPiece (destination_i, destination_j)");
+        if (queen_i == burn_i && queen_j == burn_j) { return false; }
         if (isMoveLegal(queen_i, queen_j, burn_i, burn_j) == false) { return false; }
         changeBoardIndices(burn_i, burn_j, Piece.DESTROYEDTILE);
         return true;
