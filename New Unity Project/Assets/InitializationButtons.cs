@@ -10,49 +10,91 @@ public static class InitializingParameters
     public static int columns = 10;
     public static List<Indices> WhiteQueens = new List<Indices>();
     public static List<Indices> BlackQueens = new List<Indices>();
+    public static float time = 1000.0f;
 }
 
 
 public class InitializationButtons : MonoBehaviour
 {
-
-    public InputField Rows;
-    public InputField Columns;
-    public InputField BlackQueenX;
-    public InputField BlackQueenY;
-    public InputField WhiteQueenX;
-    public InputField WhiteQueenY;
+    public Toggle StandardBoardSize;
+    public Toggle SmallBoardSize;
+    public Toggle AgainstSelf;
+    public Toggle AgainstPlayer;
+    public InputField TimeField;
 
     public void StartGame()
     {
+        SetGameParameters();
         SceneManager.LoadScene("SampleScene");
     }
 
-    public void AddWhiteQueen()
+    private void SetGameParameters()
     {
-        int x = int.Parse(WhiteQueenX.text);
-        int y = int.Parse(WhiteQueenY.text);
-        Indices indices = new Indices(x, y);
-        if (InitializingParameters.WhiteQueens.Contains(indices) || InitializingParameters.BlackQueens.Contains(indices)) { return; }
-        InitializingParameters.WhiteQueens.Add(indices);
-        WhiteQueenX.text = "";
-        WhiteQueenY.text = "";
+        if (StandardBoardSize.enabled)
+            InitializeStandardBoard();
+        else
+            InitializeSmallBoard();
+
+        if (AgainstSelf.enabled) {/*TODO*/}
+        else {/*TODO*/}
+
+        InitializingParameters.time = int.Parse(TimeField.text);
     }
 
-    public void AddBlackQueen()
+    private void InitializeStandardBoard()
     {
-        int x = int.Parse(BlackQueenX.text);
-        int y = int.Parse(BlackQueenY.text);
-        Indices indices = new Indices(x, y);
-        if (InitializingParameters.WhiteQueens.Contains(indices) || InitializingParameters.BlackQueens.Contains(indices)) { return; }
-        InitializingParameters.BlackQueens.Add(indices);
-        BlackQueenX.text = "";
-        BlackQueenY.text = "";
+        InitializingParameters.rows = 10;
+        InitializingParameters.columns = 10;
+
+        // Black Queens
+        InitializingParameters.BlackQueens.Add(new Indices(0, 3));
+        InitializingParameters.BlackQueens.Add(new Indices(0, 6));
+        InitializingParameters.BlackQueens.Add(new Indices(3, 0));
+        InitializingParameters.BlackQueens.Add(new Indices(3, 9));
+        InitializingParameters.BlackQueens.Add(new Indices(0, 0));
+        InitializingParameters.BlackQueens.Add(new Indices(0, 1));
+
+        // White Queens
+        InitializingParameters.WhiteQueens.Add(new Indices(6, 0));
+        InitializingParameters.WhiteQueens.Add(new Indices(6, 9));
+        InitializingParameters.WhiteQueens.Add(new Indices(9, 3));
+        InitializingParameters.WhiteQueens.Add(new Indices(9, 6));
     }
 
-    public void SetRowsAndColumns()
+    private void InitializeSmallBoard()
     {
-        InitializingParameters.rows = int.Parse(Rows.text);
-        InitializingParameters.columns = int.Parse(Columns.text);
+        InitializingParameters.rows = 6;
+        InitializingParameters.columns = 6;
+
+        // Black Queens
+        InitializingParameters.BlackQueens.Add(new Indices(0, 3));
+        InitializingParameters.BlackQueens.Add(new Indices(5, 2));
+
+        // White Queens
+        InitializingParameters.WhiteQueens.Add(new Indices(2, 0));
+        InitializingParameters.WhiteQueens.Add(new Indices(3, 5));
+    }
+
+
+    public void StandardBoardSizeToggleChange()
+    {
+        // CONTROL UI TOGGLE
+        SmallBoardSize.isOn = !StandardBoardSize.isOn;
+    }
+
+    public void SmallBoardSizeToggleChange()
+    {
+        // CONTROL UI TOGGLE
+        StandardBoardSize.isOn = !SmallBoardSize.isOn;
+    }
+
+    public void AgainstSelfToggleChange()
+    {
+        AgainstPlayer.isOn = !AgainstSelf.isOn;
+    }
+
+    public void AgainstPlayerToggleChange()
+    {
+        AgainstSelf.isOn = !AgainstPlayer.isOn;
     }
 }

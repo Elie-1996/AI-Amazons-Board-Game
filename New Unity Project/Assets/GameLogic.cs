@@ -185,7 +185,7 @@ public class GameLogic : MonoBehaviour
             for (int j = 0; j < columns; ++j)
             {
                 GameObject newTile;
-                Vector3 tilePosition = new Vector3(i, -j, 0.0f);
+                Vector3 tilePosition = new Vector3(j, -i, 0.0f);
                 if (GameBoardInformation.getPieceIntensity(i, j) == MaterialIntensity.DARK)
                 {   
                     newTile = Instantiate(DarkTilePrefab, tilePosition, Quaternion.identity, transform);
@@ -194,6 +194,7 @@ public class GameLogic : MonoBehaviour
                 {
                     newTile = Instantiate(LightTilePrefab, tilePosition, Quaternion.identity, transform);
                 }
+                newTile.transform.Rotate(new Vector3(0.0f, 180.0f, 0.0f));
                 newTile.AddComponent<BoxCollider>();
                 newTile.name = "Index (" + i + ", " + j + ")";
                 boardUITiles[i, j] = newTile;
