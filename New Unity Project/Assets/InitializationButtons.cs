@@ -30,12 +30,12 @@ public class InitializationButtons : MonoBehaviour
 
     private void SetGameParameters()
     {
-        if (StandardBoardSize.enabled)
+        if (StandardBoardSize.isOn)
             InitializeStandardBoard();
         else
             InitializeSmallBoard();
 
-        if (AgainstSelf.enabled) {/*TODO*/}
+        if (AgainstSelf.isOn) {/*TODO*/}
         else {/*TODO*/}
 
         InitializingParameters.time = int.Parse(TimeField.text);
@@ -51,8 +51,6 @@ public class InitializationButtons : MonoBehaviour
         InitializingParameters.BlackQueens.Add(new Indices(0, 6));
         InitializingParameters.BlackQueens.Add(new Indices(3, 0));
         InitializingParameters.BlackQueens.Add(new Indices(3, 9));
-        InitializingParameters.BlackQueens.Add(new Indices(0, 0));
-        InitializingParameters.BlackQueens.Add(new Indices(0, 1));
 
         // White Queens
         InitializingParameters.WhiteQueens.Add(new Indices(6, 0));

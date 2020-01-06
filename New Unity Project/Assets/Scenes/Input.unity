@@ -450,6 +450,7 @@ MonoBehaviour:
   SmallBoardSize: {fileID: 0}
   AgainstSelf: {fileID: 570156566}
   AgainstPlayer: {fileID: 182689460}
+  TimeField: {fileID: 0}
 --- !u!1 &262220194
 GameObject:
   m_ObjectHideFlags: 0
@@ -463,7 +464,7 @@ GameObject:
   - component: {fileID: 262220197}
   - component: {fileID: 262220196}
   m_Layer: 5
-  m_Name: InputField
+  m_Name: Time
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -702,6 +703,7 @@ MonoBehaviour:
   SmallBoardSize: {fileID: 340851398}
   AgainstSelf: {fileID: 0}
   AgainstPlayer: {fileID: 0}
+  TimeField: {fileID: 0}
 --- !u!1 &384778873
 GameObject:
   m_ObjectHideFlags: 0
@@ -1156,6 +1158,7 @@ MonoBehaviour:
   SmallBoardSize: {fileID: 0}
   AgainstSelf: {fileID: 570156566}
   AgainstPlayer: {fileID: 182689460}
+  TimeField: {fileID: 0}
 --- !u!1 &628697308
 GameObject:
   m_ObjectHideFlags: 0
@@ -1708,6 +1711,7 @@ MonoBehaviour:
   SmallBoardSize: {fileID: 340851398}
   AgainstSelf: {fileID: 0}
   AgainstPlayer: {fileID: 0}
+  TimeField: {fileID: 0}
 --- !u!1 &1237752742
 GameObject:
   m_ObjectHideFlags: 0
@@ -1931,6 +1935,7 @@ MonoBehaviour:
   SmallBoardSize: {fileID: 340851398}
   AgainstSelf: {fileID: 570156566}
   AgainstPlayer: {fileID: 182689460}
+  TimeField: {fileID: 262220196}
 --- !u!1 &1276308640
 GameObject:
   m_ObjectHideFlags: 0
