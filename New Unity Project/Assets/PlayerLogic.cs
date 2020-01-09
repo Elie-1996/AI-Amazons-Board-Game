@@ -13,16 +13,16 @@ public class Indices
 }
 
 // Note: Ultimately this is can be the AI.
-public class PlayerLogic: MonoBehaviour
+public abstract class PlayerLogic: MonoBehaviour
 {
     // TODO: Special Case: at the last 'Move' operation, the player won't have anywhere to 'Burn', so this code will fail.
     public static int totalPlayers = 0; // this will be 2 at the maximum
     public static int globalTurn = 0; // this will fluctuate between 0 and 1
-    private readonly int playerTurnIndex; // this is the player's turn index, it does not change throughout the game
-    private bool finishedMove;
+    protected readonly int playerTurnIndex; // this is the player's turn index, it does not change throughout the game
+    protected bool finishedMove;
 
     // the following variables will be used to allow to use 'Burn'.
-    private Indices selectedIndices;
+    protected Indices selectedIndices;
 
     // Player Logic MUST HAVE ONLY Default constructor.
     public PlayerLogic()
@@ -58,7 +58,29 @@ public class PlayerLogic: MonoBehaviour
     }
 
     // Note: This function is NOT recursive.
-    private IEnumerator MakeMove()
+    protected abstract IEnumerator MakeMove();
+
+    public void SelectIndices(int i, int j)
+    {
+        selectedIndices = new Indices(i, j);
+    }
+
+    protected bool MovePiece(int i, int j, int destination_i, int destination_j)
+    {
+        return GameBoardInformation.movePiece(i, j, destination_i, destination_j);
+    }
+
+    protected bool BurnPiece(int source_i, int source_j, int destination_i, int destination_j)
+    {
+        return GameBoardInformation.burnPiece(source_i, source_j, destination_i, destination_j);
+    }
+}
+
+public class HumanLogic: PlayerLogic
+{
+    HumanLogic() {}
+
+    protected override IEnumerator MakeMove()
     {
         // wait until select the queen
         Debug.Log("Player " + playerTurnIndex + ", Please Select Queen");
@@ -81,7 +103,7 @@ public class PlayerLogic: MonoBehaviour
         int destination_i = selectedIndices.i;
         int destination_j = selectedIndices.j;
         selectedIndices = null;
-        
+
         // move the queen
         bool didMove = MovePiece(queen_i, queen_j, destination_i, destination_j);
         if (didMove == false)
@@ -108,20 +130,5 @@ public class PlayerLogic: MonoBehaviour
         }
 
         finishedMove = true;
-    }
-
-    public void SelectIndices(int i, int j)
-    {
-        selectedIndices = new Indices(i, j);
-    }
-
-    private bool MovePiece(int i, int j, int destination_i, int destination_j)
-    {
-        return GameBoardInformation.movePiece(i, j, destination_i, destination_j);
-    }
-
-    private bool BurnPiece(int source_i, int source_j, int destination_i, int destination_j)
-    {
-        return GameBoardInformation.burnPiece(source_i, source_j, destination_i, destination_j);
     }
 }

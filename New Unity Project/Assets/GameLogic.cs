@@ -35,8 +35,8 @@ public class GameLogic : MonoBehaviour
         List<Indices> BlackQueens = InitializingParameters.BlackQueens;
         GameBoardInformation.InitializeBoard(rows, columns, WhiteQueens, BlackQueens);
         generateAndPlaceTiles();
-        player1 = gameObject.AddComponent<PlayerLogic>(); // initializing player1
-        player2 = gameObject.AddComponent<PlayerLogic>(); // initializing player2
+        player1 = gameObject.AddComponent<HumanLogic>(); // initializing player1
+        player2 = gameObject.AddComponent<HumanLogic>(); // initializing player2
         StartCoroutine(Play());
     }
     
