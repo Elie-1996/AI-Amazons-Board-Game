@@ -36,6 +36,7 @@ public static class GameBoardInformation
     private static Piece[,] board;
     private static Indices[] WhiteQueens;
     private static Indices[] BlackQueens;
+    private static HashSet<Indices> BurnedTiles;
     private static Piece Winner;
     public static Queue<UpdatedTile> UIUpdatesQueue; // The elements should only be removed in UI, should only be increased in this class.
     public static int rows
@@ -46,6 +47,7 @@ public static class GameBoardInformation
     {
         get => board.GetLength(1);
     }
+
 
     public static void reset()
     {
@@ -58,6 +60,7 @@ public static class GameBoardInformation
     /* initializes an empty Board */
     public static void InitializeBoard(int rows, int columns, List<Indices> _WhiteQueens, List<Indices> _BlackQueens)
     {
+        BurnedTiles = new HashSet<Indices>();
         WhiteQueens = new Indices[_WhiteQueens.Count];
         BlackQueens = new Indices[_BlackQueens.Count];
         Winner = Piece.EMPTY;
@@ -88,6 +91,8 @@ public static class GameBoardInformation
             changeBoardIndices(position.i, position.j, Piece.BLACKQUEEN);
             BlackQueens[black_queen_i++] = position;
         }
+
+        GameTree.Initialize();
     }
 
     public static MaterialIntensity getPieceIntensity(int i, int j)
@@ -154,6 +159,7 @@ public static class GameBoardInformation
         if (queen_i == burn_i && queen_j == burn_j) { return false; }
         if (isMoveLegal(queen_i, queen_j, burn_i, burn_j) == false) { return false; }
         changeBoardIndices(burn_i, burn_j, Piece.DESTROYEDTILE);
+        BurnedTiles.Add(new Indices(burn_i, burn_j));
         return true;
     }
 

@@ -21,14 +21,12 @@ public abstract class PlayerLogic: MonoBehaviour
     protected readonly int playerTurnIndex; // this is the player's turn index, it does not change throughout the game
     protected bool finishedMove;
 
-    // the following variables will be used to allow to use 'Burn'.
-    protected Indices selectedIndices;
+
 
     // Player Logic MUST HAVE ONLY Default constructor.
     public PlayerLogic()
     {
         playerTurnIndex = totalPlayers++;
-        selectedIndices = null;
         finishedMove = false;
     }
 
@@ -51,6 +49,7 @@ public abstract class PlayerLogic: MonoBehaviour
             StartCoroutine(MakeMove()); // This is where the player will actually perform the move.
             yield return new WaitUntil(() => finishedMove == true);
             finishedMove = false; // resets to false, to allow the player to play again
+            GameTree.UpdateGameStateAndTree();
             GameBoardInformation.updateGameOver();
             globalTurn = (globalTurn + 1) % 2; // increase index to say that it is the other player's turn
             yield return PlayTurn();
@@ -60,11 +59,6 @@ public abstract class PlayerLogic: MonoBehaviour
     // Note: This function is NOT recursive.
     protected abstract IEnumerator MakeMove();
 
-    public void SelectIndices(int i, int j)
-    {
-        selectedIndices = new Indices(i, j);
-    }
-
     protected bool MovePiece(int i, int j, int destination_i, int destination_j)
     {
         return GameBoardInformation.movePiece(i, j, destination_i, destination_j);
@@ -73,62 +67,5 @@ public abstract class PlayerLogic: MonoBehaviour
     protected bool BurnPiece(int source_i, int source_j, int destination_i, int destination_j)
     {
         return GameBoardInformation.burnPiece(source_i, source_j, destination_i, destination_j);
-    }
-}
-
-public class HumanLogic: PlayerLogic
-{
-    HumanLogic() {}
-
-    protected override IEnumerator MakeMove()
-    {
-        // wait until select the queen
-        Debug.Log("Player " + playerTurnIndex + ", Please Select Queen");
-        yield return new WaitUntil(() => selectedIndices != null);
-        int queen_i = selectedIndices.i;
-        int queen_j = selectedIndices.j;
-        selectedIndices = null;
-
-        // check if player selected a correct queen.
-        if ((int)GameBoardInformation.getPieceAt(queen_i, queen_j) != playerTurnIndex)
-        {
-            Debug.Log("Player " + playerTurnIndex + ", Inappropriate QUEEN Tile");
-            yield return MakeMove();
-            yield break;
-        }
-
-        // wait until select move location
-        Debug.Log("Player " + playerTurnIndex + ", Please Select Move Location");
-        yield return new WaitUntil(() => selectedIndices != null);
-        int destination_i = selectedIndices.i;
-        int destination_j = selectedIndices.j;
-        selectedIndices = null;
-
-        // move the queen
-        bool didMove = MovePiece(queen_i, queen_j, destination_i, destination_j);
-        if (didMove == false)
-        {
-            Debug.Log("Player " + playerTurnIndex + ", Inappropriate MOVE Tile");
-            yield return MakeMove();
-            yield break;
-        }
-
-        // wait until select burn location
-        Debug.Log("Player " + playerTurnIndex + ", Please Select BURN Location");
-        yield return new WaitUntil(() => selectedIndices != null);
-        int burn_i = selectedIndices.i;
-        int burn_j = selectedIndices.j;
-        selectedIndices = null;
-
-        bool didBurn = BurnPiece(destination_i, destination_j, burn_i, burn_j);
-        if (didBurn == false)
-        {
-            Debug.Log("Player " + playerTurnIndex + ", Inappropriate BURN Tile");
-            MovePiece(destination_i, destination_j, queen_i, queen_j); // reset the damage done
-            yield return MakeMove();
-            yield break;
-        }
-
-        finishedMove = true;
     }
 }

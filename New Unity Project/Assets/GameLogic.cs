@@ -71,11 +71,13 @@ public class GameLogic : MonoBehaviour
         if (i == -1 && j == -1) return;
         if (PlayerLogic.globalTurn == (int)Piece.WHITEQUEEN)
         {
-            player1.SelectIndices(i, j);
+            if (player1 is HumanLogic)
+                (player1 as HumanLogic).SelectIndices(i, j);
         }
         else
         {
-            player2.SelectIndices(i, j);
+            if (player2 is HumanLogic)
+                (player2 as HumanLogic).SelectIndices(i, j);
         }
     }
 
