@@ -5,14 +5,14 @@ using UnityEngine;
 
 public static class GameTree
 {
-    public static GameState node;
+    public static GameState head;
 
     // Assumes that the board is already fully initialized. This is highly important as it will present the game state
     // from here on out.
     public static void Initialize()
     {
         // initializes the head of the tree
-        node = new GameState(
+        head = new GameState(
             new HashSet<Indices>(InitializingParameters.WhiteQueens), 
             new HashSet<Indices>(InitializingParameters.BlackQueens), 
             new HashSet<Indices>(), 0, null);
@@ -20,19 +20,67 @@ public static class GameTree
 
     // Move to the proper state that the game is in now
     // intuitively this is done after every move in the game.
-    public static void UpdateGameStateAndTree()
+    public static void UpdateGameStateAndTree(PlayerMove lastMove)
     {
-        throw new NotImplementedException();
+        HashSet<Indices> newWhiteQueens = head.WhiteQueens;
+        HashSet<Indices> newBlackQueens = head.BlackQueens;
+        HashSet<Indices> newBurnedTiles = head.BurnedTiles;
+        if (lastMove.QueenType == Piece.WHITEQUEEN)
+        {
+            newWhiteQueens.Remove(lastMove.oldLocation);
+            newWhiteQueens.Add(lastMove.newLocation);
+        }
+        else
+        {
+            newBlackQueens.Remove(lastMove.oldLocation);
+            newBlackQueens.Add(lastMove.newLocation);
+        }
+        newBurnedTiles.Add(lastMove.burnLocation);
+
+
+        // the reason for (head.depth+1)%2 is because we only care about whether we are at a black or white depth
+        // the reason for putting parent = null is because we no longer care what we had before, we only need to
+        // keep the game from this point on out
+        head = new GameState(newWhiteQueens, newBlackQueens, newBurnedTiles, (head.depth + 1) % 2, null);
     }
 }
 
 public class GameState
 {
-    private readonly HashSet<Indices> WhiteQueens;
-    private readonly HashSet<Indices> BlackQueens;
-    private readonly HashSet<Indices> BurnedTiles;
-    private readonly int depth; // smallest depth = 0
-    private readonly GameState parent;
+    public readonly HashSet<Indices> WhiteQueens;
+    public readonly HashSet<Indices> BlackQueens;
+    public readonly HashSet<Indices> BurnedTiles;
+    public readonly int depth; // smallest depth = 0
+    public readonly GameState parent;
+
+    // for debugging
+    public override string ToString()
+    {
+        string str = "GameState:\n";
+
+        str = str + "WhiteQueens: ";
+        foreach (Indices whiteQueen in WhiteQueens)
+        {
+            str = str + ", " + whiteQueen.ToString();
+        }
+        str = str + "\n";
+
+        str = str + "BlackQueens: ";
+        foreach (Indices blackQueen in BlackQueens)
+        {
+            str = str + ", " + blackQueen.ToString();
+        }
+        str = str + "\n";
+
+        str = str + "BurnedTiles: ";
+        foreach (Indices burnedTile in BurnedTiles)
+        {
+            str = str + ", " + burnedTile.ToString();
+        }
+        str = str + "\n";
+
+        return str;
+    }
 
     public bool isWhiteTurn
     {
@@ -178,6 +226,12 @@ public sealed class AILogic : PlayerLogic
 
     protected sealed override IEnumerator MakeMove()
     {
+        // TODO: At the end should update: finishedMove = true
+        // TODO: At the end should update: lastMove
         throw new NotImplementedException();
+
+        // TODO: Don't forget to uncomment!
+        //lastMove = new PlayerMove(...);
+        //finishedMove = true;
     }
 }

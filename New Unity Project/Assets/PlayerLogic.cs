@@ -10,6 +10,42 @@ public class Indices
         i = _i;
         j = _j;
     }
+
+    public override bool Equals(object obj)
+    {
+        if (obj is Indices)
+        {
+            Indices o = (obj as Indices);
+            return o.i == i && o.j == j;
+        }
+        return false;
+    }
+
+    public override int GetHashCode()
+    {
+        return (i + "," + j).GetHashCode();
+    }
+
+    public override string ToString()
+    {
+        return "(" + i + "," + j + ")";
+    }
+}
+
+public class PlayerMove
+{
+    public readonly Piece QueenType;
+    public readonly Indices oldLocation;
+    public readonly Indices newLocation;
+    public readonly Indices burnLocation;
+
+    public PlayerMove(Piece _QueenType, int old_i, int old_j, int new_i, int new_j, int burn_i, int burn_j)
+    {
+        QueenType = _QueenType;
+        oldLocation = new Indices(old_i, old_j);
+        newLocation = new Indices(new_i, new_j);
+        burnLocation = new Indices(burn_i, burn_j);
+    }
 }
 
 // Note: Ultimately this is can be the AI.
@@ -20,7 +56,7 @@ public abstract class PlayerLogic: MonoBehaviour
     public static int globalTurn = 0; // this will fluctuate between 0 and 1
     protected readonly int playerTurnIndex; // this is the player's turn index, it does not change throughout the game
     protected bool finishedMove;
-
+    protected PlayerMove lastMove;
 
 
     // Player Logic MUST HAVE ONLY Default constructor.
@@ -49,14 +85,13 @@ public abstract class PlayerLogic: MonoBehaviour
             StartCoroutine(MakeMove()); // This is where the player will actually perform the move.
             yield return new WaitUntil(() => finishedMove == true);
             finishedMove = false; // resets to false, to allow the player to play again
-            GameTree.UpdateGameStateAndTree();
+            GameTree.UpdateGameStateAndTree(lastMove);
             GameBoardInformation.updateGameOver();
             globalTurn = (globalTurn + 1) % 2; // increase index to say that it is the other player's turn
             yield return PlayTurn();
         }
     }
 
-    // Note: This function is NOT recursive.
     protected abstract IEnumerator MakeMove();
 
     protected bool MovePiece(int i, int j, int destination_i, int destination_j)

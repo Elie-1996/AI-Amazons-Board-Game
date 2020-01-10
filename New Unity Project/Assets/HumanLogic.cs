@@ -18,6 +18,7 @@ public sealed class HumanLogic : PlayerLogic
         selectedIndices = new Indices(i, j);
     }
 
+    // Note: This function is NOT recursive.
     protected sealed override IEnumerator MakeMove()
     {
         // wait until select the queen
@@ -67,6 +68,7 @@ public sealed class HumanLogic : PlayerLogic
             yield break;
         }
 
+        lastMove = new PlayerMove((playerTurnIndex == 0) ? Piece.WHITEQUEEN : Piece.BLACKQUEEN, queen_i, queen_j, destination_i, destination_j, burn_i, burn_j);
         finishedMove = true;
     }
 }
