@@ -101,11 +101,11 @@ public class GameState
     {
         HashSet<GameState> children = new HashSet<GameState>();
 
-        HashSet<Indices> Queens;
+        HashSet<Indices> Queens = new HashSet<Indices>();
         if (isWhiteTurn)
-            Queens = WhiteQueens;
+            Queens.UnionWith(WhiteQueens);
         else
-            Queens = BlackQueens;
+            Queens.UnionWith(BlackQueens);
 
         foreach (Indices queenIndex in Queens)
         {
@@ -117,7 +117,7 @@ public class GameState
 
     private HashSet<GameState> GetEveryLegalMoveAtNextDepth(Indices queenIndex)
     {
-        return GetEveryLegalMoveInStarAngles(queenIndex, WhiteQueens, BlackQueens, BurnedTiles, true);
+        return GetEveryLegalMoveInStarAngles(queenIndex, new HashSet<Indices>(WhiteQueens), new HashSet<Indices>(BlackQueens), new HashSet<Indices>(BurnedTiles), true);
     }
 
 
@@ -141,7 +141,7 @@ public class GameState
             {
                 if (i_direction == 0 && j_direction == 0)
                     continue;
-                queenMoveChildren.UnionWith(GetEveryLegalMoveInGivenDirection(startingIndex.i, startingIndex.j, i_direction, j_direction, currentWhiteQueens, currentBlackQueens, currentBurnedTiles, isQueenIndex));
+                queenMoveChildren.UnionWith(GetEveryLegalMoveInGivenDirection(startingIndex.i, startingIndex.j, i_direction, j_direction, new HashSet<Indices>(currentWhiteQueens), new HashSet<Indices>(currentBlackQueens), new HashSet<Indices>(currentBurnedTiles), isQueenIndex));
             }
         }
         return queenMoveChildren;
@@ -167,6 +167,7 @@ public class GameState
             destination_j = InitializingParameters.columns - 1;
 
         HashSet<GameState> children = new HashSet<GameState>();
+        Indices oldBurnLocation = new Indices(-1, -1); // only useful when performing a burn move
         while (i != destination_i || j != destination_j)
         {
             i += i_direction;
@@ -174,22 +175,24 @@ public class GameState
             Indices mid_way_index = new Indices(i, j); // where we are currently "standing"
             if (currentWhiteQueens.Contains(mid_way_index) ||
                 currentBlackQueens.Contains(mid_way_index) ||
-                currentBurnedTiles.Contains(mid_way_index))
+                currentBurnedTiles.Contains(mid_way_index) ||
+                i < 0 || i >= GameBoardInformation.rows  ||
+                j < 0 || j >= GameBoardInformation.columns)
             {
                 break; // if we reach here, it means the way is blocked for index mid_way_index.
                         // as such, it is pointless to continue moving in the tiles in direction (i_direction, j_direction).
             }
             else
             {
-                Indices oldLocation = new Indices(initial_i, initial_j);
                 // here, we know that the move thus far is possible, it is time to
                 // ask whether we are moving the queen (first part of the move)
                 // or throwing a burn tile (completing the move in its entirety)
                 if (isQueenIndex) // when this is true, it means we only moved the queen
                 {
+                    Indices oldLocation = new Indices(initial_i, initial_j);
                     // get all throw possibilities
-                    HashSet<Indices> newWhiteQueens = currentWhiteQueens;
-                    HashSet<Indices> newBlackQueens = currentBlackQueens;
+                    HashSet<Indices> newWhiteQueens = new HashSet<Indices>(currentWhiteQueens);
+                    HashSet<Indices> newBlackQueens = new HashSet<Indices>(currentBlackQueens);
                     if (isWhiteTurn)
                     {
                         newWhiteQueens.Remove(oldLocation);
@@ -205,13 +208,13 @@ public class GameState
                 else
                 { // when this is true, it means we are selecting the burn location
                     // add current throw possibiltiy
-                    HashSet<Indices> newBurnedTiles = currentBurnedTiles;
-                    newBurnedTiles.Remove(oldLocation);
-                    newBurnedTiles.Add(mid_way_index);
-
+                    HashSet<Indices> newBurnIndices = new HashSet<Indices>(currentBurnedTiles);
+                    newBurnIndices.Remove(oldBurnLocation);
+                    newBurnIndices.Add(mid_way_index);
+                    oldBurnLocation = mid_way_index; // update this to be the last location which burned.
 
                     // Add a single gamestate
-                    children.Add(new GameState(currentWhiteQueens, currentBlackQueens, newBurnedTiles, depth + 1, this));
+                    children.Add(new GameState(new HashSet<Indices>(currentWhiteQueens), new HashSet<Indices>(currentBlackQueens), newBurnIndices, depth + 1, this));
                 }
             }
         }

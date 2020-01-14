@@ -64,16 +64,22 @@ public class InitializationButtons : MonoBehaviour
 
     private void InitializeSmallBoard()
     {
-        InitializingParameters.rows = 6;
-        InitializingParameters.columns = 6;
+        InitializingParameters.rows = 3;
+        InitializingParameters.columns = 3;
+        InitializingParameters.BlackQueens.Add(new Indices(0, 0));
+        InitializingParameters.WhiteQueens.Add(new Indices(2, 2));
 
-        // Black Queens
-        InitializingParameters.BlackQueens.Add(new Indices(0, 3));
-        InitializingParameters.BlackQueens.Add(new Indices(5, 2));
+        // TODO: Uncomment this ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        //InitializingParameters.rows = 6;
+        //InitializingParameters.columns = 6;
 
-        // White Queens
-        InitializingParameters.WhiteQueens.Add(new Indices(2, 0));
-        InitializingParameters.WhiteQueens.Add(new Indices(3, 5));
+        //// Black Queens
+        //InitializingParameters.BlackQueens.Add(new Indices(0, 3));
+        //InitializingParameters.BlackQueens.Add(new Indices(5, 2));
+
+        //// White Queens
+        //InitializingParameters.WhiteQueens.Add(new Indices(2, 0));
+        //InitializingParameters.WhiteQueens.Add(new Indices(3, 5));
     }
 
 
