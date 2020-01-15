@@ -35,9 +35,32 @@ public class GameLogic : MonoBehaviour
         List<Indices> BlackQueens = InitializingParameters.BlackQueens;
         GameBoardInformation.InitializeBoard(rows, columns, WhiteQueens, BlackQueens);
         generateAndPlaceTiles();
-        player1 = gameObject.AddComponent<HumanLogic>(); // initializing player1
-        player2 = gameObject.AddComponent<HumanLogic>(); // initializing player2
+
+        // initialize players as Humans/AIs as requested
+        InitializePlayersAsHumansOrAIs();
+
+        // Players identities are finally recognized, we can start playing!
         StartCoroutine(Play());
+    }
+
+    private void InitializePlayersAsHumansOrAIs()
+    {
+        if (InitializingParameters.numberOfAIs == 2)
+        {
+            player1 = gameObject.AddComponent<AILogic>();
+            player2 = gameObject.AddComponent<AILogic>();
+        }
+        else if (InitializingParameters.numberOfAIs == 1)
+        {
+            player1 = gameObject.AddComponent<HumanLogic>();
+            player2 = gameObject.AddComponent<AILogic>();
+        }
+        else //InitializingParameters.numberOfAIs should be zero!
+        {
+            if (InitializingParameters.numberOfAIs != 0) throw new System.Exception("Expected number of AIs to be zero, instead = " + InitializingParameters.numberOfAIs);
+            player1 = gameObject.AddComponent<HumanLogic>();
+            player2 = gameObject.AddComponent<HumanLogic>();
+        }
     }
     
     IEnumerator Play()

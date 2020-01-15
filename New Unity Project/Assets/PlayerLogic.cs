@@ -46,6 +46,11 @@ public class PlayerMove
         newLocation = new Indices(new_i, new_j);
         burnLocation = new Indices(burn_i, burn_j);
     }
+
+    public override string ToString()
+    {
+        return "from:" + oldLocation.ToString() + ", to:" + newLocation.ToString() + ", burn:" + burnLocation.ToString();
+    }
 }
 
 // Note: Ultimately this is can be the AI.

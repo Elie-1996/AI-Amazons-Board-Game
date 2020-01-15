@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -15,7 +16,7 @@ public static class GameTree
         head = new GameState(
             new HashSet<Indices>(InitializingParameters.WhiteQueens), 
             new HashSet<Indices>(InitializingParameters.BlackQueens), 
-            new HashSet<Indices>(), 0, null);
+            new HashSet<Indices>(), 0, null, null);
     }
 
     // Move to the proper state that the game is in now
@@ -41,7 +42,7 @@ public static class GameTree
         // the reason for (head.depth+1)%2 is because we only care about whether we are at a black or white depth
         // the reason for putting parent = null is because we no longer care what we had before, we only need to
         // keep the game from this point on out
-        head = new GameState(newWhiteQueens, newBlackQueens, newBurnedTiles, (head.depth + 1) % 2, null);
+        head = new GameState(newWhiteQueens, newBlackQueens, newBurnedTiles, (head.depth + 1) % 2, null, lastMove);
     }
 }
 
@@ -51,7 +52,7 @@ public class GameState
     public readonly HashSet<Indices> BlackQueens;
     public readonly HashSet<Indices> BurnedTiles;
     public readonly int depth; // smallest depth = 0
-    public readonly GameState parent;
+    public readonly Tuple<GameState, PlayerMove> parentAndMove; // the move we needed to make from the parent to get to this state
 
     // for debugging
     public override string ToString()
@@ -79,6 +80,9 @@ public class GameState
         }
         str = str + "\n";
 
+        str = str + "Move=" + parentAndMove.Item2.ToString();
+        str = str + "\n";
+
         return str;
     }
 
@@ -87,13 +91,13 @@ public class GameState
         get => depth % 2 == 0; // 0 is white queen, (depth = 0 is white).
     }
 
-    public GameState(HashSet<Indices> _WhiteQueens, HashSet<Indices> _BlackQueens, HashSet<Indices> _BurnedTiles, int _depth, GameState _parent)
+    public GameState(HashSet<Indices> _WhiteQueens, HashSet<Indices> _BlackQueens, HashSet<Indices> _BurnedTiles, int _depth, GameState _parent, PlayerMove _move)
     {
         WhiteQueens = _WhiteQueens;
         BlackQueens = _BlackQueens;
         BurnedTiles = _BurnedTiles;
         depth = _depth;
-        parent = _parent;
+        parentAndMove = new Tuple<GameState, PlayerMove>(_parent, _move);
     }
 
     // Reveal all children at depth d+1
@@ -117,7 +121,7 @@ public class GameState
 
     private HashSet<GameState> GetEveryLegalMoveAtNextDepth(Indices queenIndex)
     {
-        return GetEveryLegalMoveInStarAngles(queenIndex, new HashSet<Indices>(WhiteQueens), new HashSet<Indices>(BlackQueens), new HashSet<Indices>(BurnedTiles), true);
+        return GetEveryLegalMoveInStarAngles(queenIndex, new HashSet<Indices>(WhiteQueens), new HashSet<Indices>(BlackQueens), new HashSet<Indices>(BurnedTiles), -1, -1, true);
     }
 
 
@@ -127,6 +131,7 @@ public class GameState
         HashSet<Indices> currentWhiteQueens,
         HashSet<Indices> currentBlackQueens,
         HashSet<Indices> currentBurnedTiles,
+        int queen_started_at_i, int queen_started_at_j, // these two parameters simply say where the queen started, they are usable only at the end of the move (after burning, i.e when adding a new GameState)
         bool isQueenIndex // this is a crucial parameter in the expand algorithm
                           // when it is set to true, we will assume that @startingIndex is a queen's starting index
                           // essentially we are currently moving the queen, thus completing the FIRST part of the move.
@@ -141,7 +146,7 @@ public class GameState
             {
                 if (i_direction == 0 && j_direction == 0)
                     continue;
-                queenMoveChildren.UnionWith(GetEveryLegalMoveInGivenDirection(startingIndex.i, startingIndex.j, i_direction, j_direction, new HashSet<Indices>(currentWhiteQueens), new HashSet<Indices>(currentBlackQueens), new HashSet<Indices>(currentBurnedTiles), isQueenIndex));
+                queenMoveChildren.UnionWith(GetEveryLegalMoveInGivenDirection(startingIndex.i, startingIndex.j, i_direction, j_direction, new HashSet<Indices>(currentWhiteQueens), new HashSet<Indices>(currentBlackQueens), new HashSet<Indices>(currentBurnedTiles), queen_started_at_i, queen_started_at_j, isQueenIndex));
             }
         }
         return queenMoveChildren;
@@ -153,6 +158,7 @@ public class GameState
         HashSet<Indices> currentWhiteQueens,
         HashSet<Indices> currentBlackQueens,
         HashSet<Indices> currentBurnedTiles, 
+        int queen_started_at_i, int queen_started_at_j,
         bool isQueenIndex)
     {
         int initial_i = i;
@@ -203,7 +209,7 @@ public class GameState
                         newBlackQueens.Remove(oldLocation);
                         newBlackQueens.Add(mid_way_index);
                     }
-                    children.UnionWith(GetEveryLegalMoveInStarAngles(mid_way_index, newWhiteQueens, newBlackQueens, currentBurnedTiles, false));
+                    children.UnionWith(GetEveryLegalMoveInStarAngles(mid_way_index, newWhiteQueens, newBlackQueens, currentBurnedTiles, initial_i, initial_j, false));
                 }
                 else
                 { // when this is true, it means we are selecting the burn location
@@ -214,7 +220,7 @@ public class GameState
                     oldBurnLocation = mid_way_index; // update this to be the last location which burned.
 
                     // Add a single gamestate
-                    children.Add(new GameState(new HashSet<Indices>(currentWhiteQueens), new HashSet<Indices>(currentBlackQueens), newBurnIndices, depth + 1, this));
+                    children.Add(new GameState(new HashSet<Indices>(currentWhiteQueens), new HashSet<Indices>(currentBlackQueens), newBurnIndices, depth + 1, this, new PlayerMove(isWhiteTurn ? Piece.WHITEQUEEN : Piece.BLACKQUEEN, queen_started_at_i, queen_started_at_j, initial_i, initial_j, mid_way_index.i, mid_way_index.j)));
                 }
             }
         }
@@ -225,16 +231,29 @@ public class GameState
 
 public sealed class AILogic : PlayerLogic
 {
-    AILogic() { }
+
+    private GameState currentState;
+
+    AILogic() {}
 
     protected sealed override IEnumerator MakeMove()
     {
-        // TODO: At the end should update: finishedMove = true
-        // TODO: At the end should update: lastMove
-        throw new NotImplementedException();
+        currentState = GameTree.head;
 
-        // TODO: Don't forget to uncomment!
-        //lastMove = new PlayerMove(...);
-        //finishedMove = true;
+        HashSet<GameState> children = currentState.Expand();
+
+        System.Random randomizer = new System.Random();
+        GameState[] childrenAsArray = children.ToArray();
+        GameState randomState = childrenAsArray[randomizer.Next(childrenAsArray.Length)];
+        lastMove = randomState.parentAndMove.Item2;
+        MakeMoveOnBoard(lastMove);
+        yield break;
+    }
+
+    private void MakeMoveOnBoard(PlayerMove move)
+    {
+        GameBoardInformation.movePiece(move.oldLocation.i, move.oldLocation.j, move.newLocation.i, move.newLocation.j);
+        GameBoardInformation.burnPiece(move.newLocation.i, move.newLocation.j, move.burnLocation.i, move.burnLocation.j);
+        finishedMove = true;
     }
 }
