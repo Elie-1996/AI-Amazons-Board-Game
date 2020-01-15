@@ -239,15 +239,19 @@ public sealed class AILogic : PlayerLogic
     protected sealed override IEnumerator MakeMove()
     {
         currentState = GameTree.head;
+        lastMove = decideMove();
+        MakeMoveOnBoard(lastMove);
+        yield break;
+    }
 
+    private PlayerMove decideMove()
+    {
         HashSet<GameState> children = currentState.Expand();
 
         System.Random randomizer = new System.Random();
         GameState[] childrenAsArray = children.ToArray();
-        GameState randomState = childrenAsArray[randomizer.Next(childrenAsArray.Length)];
-        lastMove = randomState.parentAndMove.Item2;
-        MakeMoveOnBoard(lastMove);
-        yield break;
+        GameState playState = childrenAsArray[randomizer.Next(childrenAsArray.Length)];
+        return playState.parentAndMove.Item2;
     }
 
     private void MakeMoveOnBoard(PlayerMove move)
