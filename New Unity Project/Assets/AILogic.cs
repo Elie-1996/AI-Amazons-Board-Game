@@ -76,6 +76,7 @@ public class GameState
     public Tuple<GameState, PlayerMove> parentAndMove; // the move we needed to make from the parent to get to this state
     public HashSet<GameState> Children { get; private set; }
     public double HeuristicValue { get; private set; }
+    private bool IsFullyExpanded; // asks whether all children have been generated, this is needed when playing against someone who is not doing a minimax decision. (for instance, a human player).
 
 
     public override bool Equals(object obj)
@@ -169,6 +170,7 @@ public class GameState
         parentAndMove = new Tuple<GameState, PlayerMove>(_parent, _move);
         Children = new HashSet<GameState>();
         HeuristicValue = isWhiteTurn == true ? double.NegativeInfinity : double.PositiveInfinity; // this decision is due to the fact that white is trying to maximize, while black is trying to minimize.
+        IsFullyExpanded = false;
     }
 
     public void Expand() { ExpandDFS(1); }
@@ -189,7 +191,7 @@ public class GameState
             return;
         }
         // if we have already expanded the current state, then try to expand its children. skip expanding again.
-        else if (currentState.Children.Count > 0)
+        else if (currentState.IsFullyExpanded)
         {
             foreach (GameState child in currentState.Children)
             {
@@ -235,6 +237,7 @@ public class GameState
         int additionalDepth // how deep to DFS expand within the tree
         )
     {
+        bool isFullyExpanded = true;
         for (int i_direction = -1; i_direction <= 1; ++i_direction)
         {
             for (int j_direction = -1; j_direction <= 1; ++j_direction)
@@ -246,9 +249,13 @@ public class GameState
 
                 // consider alpha-beta pruning
                 if (shouldPrune)
+                {
+                    isFullyExpanded = false;
                     break;
+                }
             }
         }
+        currentState.IsFullyExpanded = isFullyExpanded;
     }
 
     // returns true if we should perform alpha-beta pruning!
