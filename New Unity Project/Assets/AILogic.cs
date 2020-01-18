@@ -241,12 +241,18 @@ public class GameState
             {
                 if (i_direction == 0 && j_direction == 0)
                     continue;
-                GetEveryLegalMoveInGivenDirection(currentState, startingIndex.i, startingIndex.j, i_direction, j_direction, new HashSet<Indices>(currentWhiteQueens), new HashSet<Indices>(currentBlackQueens), new HashSet<Indices>(currentBurnedTiles), queen_started_at_i, queen_started_at_j, isQueenIndex, additionalDepth);
+
+                bool shouldPrune = GetEveryLegalMoveInGivenDirection(currentState, startingIndex.i, startingIndex.j, i_direction, j_direction, new HashSet<Indices>(currentWhiteQueens), new HashSet<Indices>(currentBlackQueens), new HashSet<Indices>(currentBurnedTiles), queen_started_at_i, queen_started_at_j, isQueenIndex, additionalDepth);
+
+                // consider alpha-beta pruning
+                if (shouldPrune)
+                    break;
             }
         }
     }
 
-    private static void GetEveryLegalMoveInGivenDirection(
+    // returns true if we should perform alpha-beta pruning!
+    private static bool GetEveryLegalMoveInGivenDirection(
         GameState currentState,
         int i, int j, 
         int i_direction, int j_direction, 
@@ -321,9 +327,37 @@ public class GameState
                     // child should have a heuristic value at this point, and the parent should 
                     // have their heuristic updated as required by minimax
                     currentState.EvaluateHeuristicAsParent(child.HeuristicValue);
+                    bool shouldPrune = CheckIfAlphaBetaPruningIsPossible(currentState);
+                    if (shouldPrune)
+                        return true;
                 }
             }
         }
+
+        return false;
+    }
+
+    private static bool CheckIfAlphaBetaPruningIsPossible(GameState state)
+    {
+        GameState parent = state.parentAndMove.Item1;
+        if (parent == null) return false; // when you're the head, you can't prune anything.
+        if (parent.isWhiteTurn)
+        {
+            // if parent is a white turn, it will try to maximize the heuristic
+            // thus, we can ignore values that are smaller than its heuristic value
+            // can be visualized well at time 6:06 at vid: https://www.youtube.com/watch?v=l-hh51ncgDI&t=368s
+            if (parent.HeuristicValue > state.HeuristicValue) return true;
+        }
+        else
+        {
+            // if parent is a black turn, it will try to minimize the heuristic
+            // thus, we can ignore values that are larger than its heuristic value
+            // can be visualized well at time 5:32 at vid: https://www.youtube.com/watch?v=l-hh51ncgDI&t=368s
+            if (parent.HeuristicValue < state.HeuristicValue)
+                return true;
+        }
+
+        return false;
     }
 
     private void EvaluateHeuristicAsParent(double recentChildHeuristicValue)
@@ -364,21 +398,54 @@ public sealed class AILogic : PlayerLogic
     protected sealed override IEnumerator MakeMove()
     {
         currentState = GameTree.head;
-        lastMove = DecideMove();
+        lastMove = ThinkThenDecide();
         MakeMoveOnBoard(lastMove);
         yield break;
     }
 
-    private PlayerMove DecideMove()
+    private PlayerMove ThinkThenDecide()
     {
-        currentState.Expand();
-        //currentState.ExpandDFS(4);
+        // explore the tree
+        //currentState.Expand();
+        currentState.ExpandDFS(2);
+
+        // play your move
+        GameState playState = FindBestMove();
+        return playState.parentAndMove.Item2;
+    }
+
+    private GameState FindBestMove()
+    {
         HashSet<GameState> children = currentState.Children;
 
-        System.Random randomizer = new System.Random();
-        GameState[] childrenAsArray = children.ToArray();
-        GameState playState = childrenAsArray[randomizer.Next(childrenAsArray.Length)];
-        return playState.parentAndMove.Item2;
+        if (currentState.isWhiteTurn)
+        {
+            GameState highestState = null;
+            double highestHeuristic = double.NegativeInfinity;
+            foreach (GameState child in children)
+            {
+                if (child.HeuristicValue > highestHeuristic)
+                {
+                    highestHeuristic = child.HeuristicValue;
+                    highestState = child;
+                }
+            }
+            return highestState;
+        }
+        else
+        {
+            GameState lowestState = null;
+            double lowestHeuristic = double.PositiveInfinity;
+            foreach (GameState child in children)
+            {
+                if (child.HeuristicValue < lowestHeuristic)
+                {
+                    lowestHeuristic = child.HeuristicValue;
+                    lowestState = child;
+                }
+            }
+            return lowestState;
+        }
     }
 
     private void MakeMoveOnBoard(PlayerMove move)
