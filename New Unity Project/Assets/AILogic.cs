@@ -39,9 +39,31 @@ public static class GameTree
         newBurnedTiles.Add(lastMove.burnLocation);
 
 
+
         // the reason for putting parent = null is because we no longer care what we had before, we only need to
         // keep the game from this point on out
-        head = new GameState(newWhiteQueens, newBlackQueens, newBurnedTiles, head.depth + 1, null, lastMove);
+        GameState result = new GameState(newWhiteQueens, newBlackQueens, newBurnedTiles, head.depth + 1, null, lastMove);
+        foreach (GameState child in head.Children)
+        {
+            if (child.Equals(result)) {
+                result = child;
+                break;
+            }
+        }
+
+        head = result;
+        head.parentAndMove = new Tuple<GameState, PlayerMove>(
+            null,
+            new PlayerMove(
+                head.parentAndMove.Item2.QueenType,
+                head.parentAndMove.Item2.oldLocation.i,
+                head.parentAndMove.Item2.oldLocation.j,
+                head.parentAndMove.Item2.newLocation.i,
+                head.parentAndMove.Item2.newLocation.j,
+                head.parentAndMove.Item2.burnLocation.i,
+                head.parentAndMove.Item2.burnLocation.j
+            )
+        );
     }
 }
 
@@ -51,9 +73,49 @@ public class GameState
     public readonly HashSet<Indices> BlackQueens;
     public readonly HashSet<Indices> BurnedTiles;
     public readonly int depth; // smallest depth = 0
-    public readonly Tuple<GameState, PlayerMove> parentAndMove; // the move we needed to make from the parent to get to this state
+    public Tuple<GameState, PlayerMove> parentAndMove; // the move we needed to make from the parent to get to this state
     public HashSet<GameState> Children { get; private set; }
     public double HeuristicValue { get; private set; }
+
+
+    public override bool Equals(object obj)
+    {
+        if (!(obj is GameState)) return false;
+        GameState other = obj as GameState;
+        if (other.depth != depth) return false;
+        foreach (Indices queen in WhiteQueens)
+        {
+            if (!other.WhiteQueens.Contains(queen))
+            {
+                return false;
+            }
+        }
+        foreach (Indices queen in BlackQueens)
+        {
+            if(!other.BlackQueens.Contains(queen))
+            {
+                return false;
+            }
+        }
+        foreach (Indices burned in BurnedTiles)
+        {
+            if (!other.BurnedTiles.Contains(burned))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public override int GetHashCode()
+    {
+        var hashCode = -1856427188;
+        hashCode = hashCode * -1521134295 + EqualityComparer<HashSet<Indices>>.Default.GetHashCode(WhiteQueens);
+        hashCode = hashCode * -1521134295 + EqualityComparer<HashSet<Indices>>.Default.GetHashCode(BlackQueens);
+        hashCode = hashCode * -1521134295 + EqualityComparer<HashSet<Indices>>.Default.GetHashCode(BurnedTiles);
+        hashCode = hashCode * -1521134295 + depth.GetHashCode();
+        return hashCode;
+    }
 
     // for debugging
     public override string ToString()
@@ -126,15 +188,13 @@ public class GameState
             }
             return;
         }
-        // if we have already expanded the current state, then try to expand its children.
+        // if we have already expanded the current state, then try to expand its children. skip expanding again.
         else if (currentState.Children.Count > 0)
         {
-            Debug.Log("It was useful"); // TODO: Delete this Debug.Log later.
             foreach (GameState child in currentState.Children)
             {
                 ExpandDFS(child, additionalDepth - 1);
             }
-            // no need to expand again
             return;
         }
         // if the state hasn't expanded already, then expand with the depth.
@@ -312,7 +372,7 @@ public sealed class AILogic : PlayerLogic
     private PlayerMove DecideMove()
     {
         currentState.Expand();
-        //currentState.ExpandDFS(2);
+        //currentState.ExpandDFS(4);
         HashSet<GameState> children = currentState.Children;
 
         System.Random randomizer = new System.Random();
