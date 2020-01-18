@@ -53,6 +53,7 @@ public class GameState
     public readonly int depth; // smallest depth = 0
     public readonly Tuple<GameState, PlayerMove> parentAndMove; // the move we needed to make from the parent to get to this state
     public HashSet<GameState> Children { get; private set; }
+    public double HeuristicValue { get; private set; }
 
     // for debugging
     public override string ToString()
@@ -105,12 +106,10 @@ public class GameState
         depth = _depth;
         parentAndMove = new Tuple<GameState, PlayerMove>(_parent, _move);
         Children = new HashSet<GameState>();
+        HeuristicValue = isWhiteTurn == true ? double.NegativeInfinity : double.PositiveInfinity; // this decision is due to the fact that white is trying to maximize, while black is trying to minimize.
     }
 
-    public void Expand() {
-        if (Children == null) return;
-        ExpandDFS(1);
-    }
+    public void Expand() { ExpandDFS(1); }
 
     public void ExpandDFS(int additionalDepth) { ExpandDFS(this, additionalDepth); }
 
@@ -118,11 +117,19 @@ public class GameState
     private static void ExpandDFS(GameState currentState, int additionalDepth)
     {
         // if we reached the required depth, end call.
-        if (additionalDepth <= 0) return;
+        if (additionalDepth <= 0)
+        {
+            if (currentState.Children.Count == 0)
+            {
+                // evaluate heuristic as a leaf.
+                currentState.EvaluateHeuristicAsLeaf();
+            }
+            return;
+        }
         // if we have already expanded the current state, then try to expand its children.
         else if (currentState.Children.Count > 0)
         {
-            Debug.Log("It was useful");
+            Debug.Log("It was useful"); // TODO: Delete this Debug.Log later.
             foreach (GameState child in currentState.Children)
             {
                 ExpandDFS(child, additionalDepth - 1);
@@ -249,10 +256,41 @@ public class GameState
                     // Add a single gamestate
                     GameState child = new GameState(new HashSet<Indices>(currentWhiteQueens), new HashSet<Indices>(currentBlackQueens), newBurnIndices, currentState.depth + 1, currentState, new PlayerMove(currentState.isWhiteTurn ? Piece.WHITEQUEEN : Piece.BLACKQUEEN, queen_started_at_i, queen_started_at_j, initial_i, initial_j, mid_way_index.i, mid_way_index.j));
                     currentState.Children.Add(child);
-                    child.ExpandDFS(additionalDepth - 1); // go to the next depth
+                    child.ExpandDFS(additionalDepth - 1); // go to the next depth, this line garauntees DFS procedure.
+
+                    // child should have a heuristic value at this point, and the parent should 
+                    // have their heuristic updated as required by minimax
+                    currentState.EvaluateHeuristicAsParent(child.HeuristicValue);
                 }
             }
         }
+    }
+
+    private void EvaluateHeuristicAsParent(double recentChildHeuristicValue)
+    {
+        if (isWhiteTurn)
+        {
+            // try to maximize heuristic
+            if (recentChildHeuristicValue > HeuristicValue)
+            {
+                HeuristicValue = recentChildHeuristicValue;
+            }
+        }
+        else
+        {
+            // try to minimize the heuristic
+            if (recentChildHeuristicValue < HeuristicValue)
+            {
+                HeuristicValue = recentChildHeuristicValue;
+            }
+        }
+    }
+
+
+    private static System.Random randomizer = new System.Random();
+    private void EvaluateHeuristicAsLeaf()
+    {
+        HeuristicValue = randomizer.NextDouble()*50.0; // some evaluation, change this later!
     }
 }
 
@@ -274,6 +312,7 @@ public sealed class AILogic : PlayerLogic
     private PlayerMove DecideMove()
     {
         currentState.Expand();
+        //currentState.ExpandDFS(2);
         HashSet<GameState> children = currentState.Children;
 
         System.Random randomizer = new System.Random();
