@@ -49,8 +49,10 @@ public static class GameBoardInformation
     }
 
 
-    public static int ManyMoves { get => (int)(rows * columns * 0.5); }
+    public static int ManyMoves { get => (int)(rows * columns * 0.50); }
     public static int ModerateMoves { get => (int)(rows * columns * 0.35); }
+    public static int VeryEarlyInTheGame { get => (int)(rows * columns * 0.1); }
+
 
 
     public static void reset()

@@ -397,9 +397,56 @@ public class GameState
         else if (winner == Piece.BLACKQUEEN) HeuristicValue = double.NegativeInfinity;
         else
         {
-            // super smart evaluation
-            HeuristicValue = TerritorialMobility(WhiteQueens, BlackQueens, BurnedTiles);
+            if (depth <= GameBoardInformation.VeryEarlyInTheGame)
+                HeuristicValue = FastEvaluation(WhiteQueens, BlackQueens, BurnedTiles);
+            else
+                HeuristicValue = TerritorialMobility(WhiteQueens, BlackQueens, BurnedTiles);
         }
+    }
+
+    private static double FastEvaluation(HashSet<Indices> whiteQueens, HashSet<Indices> blackQueens, HashSet<Indices> burnedTiles)
+    {
+        HashSet<Indices> BlockingTiles = new HashSet<Indices>(burnedTiles);
+        BlockingTiles.UnionWith(whiteQueens);
+        BlockingTiles.UnionWith(blackQueens);
+
+        int whiteMoves = 0;
+        foreach (Indices whiteQueen in whiteQueens)
+        {
+            whiteMoves += GetAmountOfPossibleMoves(whiteQueen, BlockingTiles);
+        }
+
+        int blackMoves = 0;
+        foreach (Indices blackQueen in blackQueens)
+        {
+            blackMoves += GetAmountOfPossibleMoves(blackQueen, BlockingTiles);
+        }
+
+        return 0.65 * whiteMoves - 0.35 * blackMoves;
+    }
+
+    private static int GetAmountOfPossibleMoves(Indices queen, HashSet<Indices> BlockingTiles)
+    {
+        int totalPossibleMoves = 0;
+        for (int i_dir = -1; i_dir <= 1; ++i_dir)
+        {
+            for (int j_dir = -1; j_dir <= 1; ++j_dir)
+            {
+                if (i_dir == 0 && j_dir == 0) continue;
+                int curr_i = queen.i, curr_j = queen.j;
+                curr_i += i_dir; curr_j = j_dir;
+                while ((0 <= curr_i && curr_i < GameBoardInformation.rows) &&
+                (0 <= curr_j && curr_j < GameBoardInformation.columns))
+                {
+                    if (BlockingTiles.Contains(new Indices(curr_i, curr_j))) break;
+
+                    ++totalPossibleMoves;
+                    curr_i += i_dir;
+                    curr_j += j_dir;
+                }
+            }
+        }
+        return totalPossibleMoves;
     }
 
     // source: https://core.ac.uk/download/pdf/81108035.pdf
@@ -800,8 +847,19 @@ public sealed class AILogic : PlayerLogic
     private PlayerMove ThinkThenDecide()
     {
         // explore the tree
-        currentState.Expand();
-        //currentState.ExpandDFS(2);
+        //currentState.Expand();
+        if (currentState.depth >= GameBoardInformation.ManyMoves)
+        {
+            currentState.ExpandDFS(3);
+        }
+        else if (currentState.depth >= GameBoardInformation.ModerateMoves)
+        {
+            currentState.ExpandDFS(2);
+        }
+        else
+        {
+            currentState.Expand();
+        }
 
         // play your move
         GameState playState = FindBestMove();
