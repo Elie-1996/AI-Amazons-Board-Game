@@ -49,6 +49,10 @@ public static class GameBoardInformation
     }
 
 
+    public static int ManyMoves { get => (int)(rows * columns * 0.5); }
+    public static int ModerateMoves { get => (int)(rows * columns * 0.35); }
+
+
     public static void reset()
     {
         Debug.LogError("Please Implement GameBoardInformation reset!");

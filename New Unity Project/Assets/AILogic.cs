@@ -8,6 +8,7 @@ public static class GameTree
 {
     public static GameState head;
 
+
     // Assumes that the board is already fully initialized. This is highly important as it will present the game state
     // from here on out.
     public static void Initialize()
@@ -77,6 +78,8 @@ public class GameState
     public HashSet<GameState> Children { get; private set; }
     public double HeuristicValue { get; private set; }
     private bool IsFullyExpanded; // asks whether all children have been generated, this is needed when playing against someone who is not doing a minimax decision. (for instance, a human player).
+
+
 
     public override bool Equals(object obj)
     {
@@ -697,22 +700,18 @@ public class GameState
         }
     }
 
-    private static readonly int ManyMoves = (int)(GameBoardInformation.rows * GameBoardInformation.columns * 0.5);
-    private static readonly int ModerateMoves = (int)(GameBoardInformation.rows * GameBoardInformation.columns * 0.35);
     // important: f1+f2+f3+f4 = 1.0
     private static Tuple<double, double, double, double> GetFs(int numberOfMoves)
     {
-        Debug.Log(ManyMoves);
-        Debug.Log(ModerateMoves);
         // TODO: use w.
         double f1, f2, f3, f4;
-        if (numberOfMoves >= ManyMoves) // num of moves very high
+        if (numberOfMoves >= GameBoardInformation.ManyMoves) // num of moves very high
         {
             f1 = 0.8;
             f2 = 0.05;
             f3 = 0.05;
         }
-        else if (numberOfMoves >= ModerateMoves) // num of moves very low
+        else if (numberOfMoves >= GameBoardInformation.ModerateMoves) // num of moves very low
         {
             f1 = 0.2;
             f2 = 0.35;
