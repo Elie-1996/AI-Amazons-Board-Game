@@ -78,7 +78,6 @@ public class GameState
     public double HeuristicValue { get; private set; }
     private bool IsFullyExpanded; // asks whether all children have been generated, this is needed when playing against someone who is not doing a minimax decision. (for instance, a human player).
 
-
     public override bool Equals(object obj)
     {
         if (!(obj is GameState)) return false;
@@ -388,10 +387,399 @@ public class GameState
     }
 
 
-    private static System.Random randomizer = new System.Random();
     private void EvaluateHeuristicAsLeaf()
     {
-        HeuristicValue = randomizer.NextDouble()*50.0; // some evaluation, change this later!
+        Piece winner = Winner();
+        if (winner == Piece.WHITEQUEEN) HeuristicValue = double.PositiveInfinity;
+        else if (winner == Piece.BLACKQUEEN) HeuristicValue = double.NegativeInfinity;
+        else
+        {
+            // super smart evaluation
+            HeuristicValue = TerritorialMobility(WhiteQueens, BlackQueens, BurnedTiles);
+        }
+    }
+
+    // source: https://core.ac.uk/download/pdf/81108035.pdf
+    // very nice explanation imo! :)
+    // although, I only evaluate the t part of the heuristic, it is enough for me that it plays reasonably :)
+    private static double TerritorialMobility(
+        HashSet<Indices> WhiteQueens,
+        HashSet<Indices> BlackQueens,
+        HashSet<Indices> BurnedTiles
+        )
+    {
+        HashSet<Indices> BlockingTiles = new HashSet<Indices>();
+        BlockingTiles.UnionWith(BurnedTiles);
+        BlockingTiles.UnionWith(WhiteQueens);
+        BlockingTiles.UnionWith(BlackQueens);
+        return TerritorialMobilityParameterSetter(WhiteQueens, BlackQueens, BlockingTiles);
+    }
+
+
+    private static double TerritorialMobilityParameterSetter(
+        HashSet<Indices> WhiteQueens, 
+        HashSet<Indices> BlackQueens, 
+        HashSet<Indices> BlockingTiles
+        )
+    {
+        // these couple of lines can be multithreaded
+        Tuple<double[], double[]> listOfAll_D1_1_and_D2_1 = GetQueenAndKingDistances(WhiteQueens, BlockingTiles);
+        Tuple<double[], double[]> listOfAll_D1_2_and_D2_2 = GetQueenAndKingDistances(BlackQueens, BlockingTiles);
+
+        Tuple<double, double> t1_t2_w = GetTs(listOfAll_D1_1_and_D2_1, listOfAll_D1_2_and_D2_2);
+        double t1 = t1_t2_w.Item1, t2 = t1_t2_w.Item2;
+
+        Tuple<double, double> c1_c2 = GetCs(listOfAll_D1_1_and_D2_1.Item1, listOfAll_D1_2_and_D2_2.Item1,
+            listOfAll_D1_2_and_D2_2.Item2, listOfAll_D1_1_and_D2_1.Item2);
+        double c1 = c1_c2.Item1, c2 = c1_c2.Item2;
+
+        Tuple<double, double, double, double> all_fs = GetFs(BlockingTiles.Count);
+        double f1 = all_fs.Item1, f2 = all_fs.Item2, f3 = all_fs.Item3, f4 = all_fs.Item4;
+
+        // step4: apply t = f1 * t1 + f2 * c1 + f3 * c2 + f4 * t2
+        double t = f1 * t1 + f2 * c1 + f3 * c2 + f4 * t2;
+
+        //step5: find m ---- unfortunately not enough time to understand + implement :(
+        //double m = 0;
+        // step6: return t+m
+        //return t + m;
+
+        // should also compute m, but I was running out of time :(
+        return t;
+    }
+
+    private static Tuple<double, double> GetTs(
+        Tuple<double[], double[]> listOfAll_D1_1_and_D2_1,
+        Tuple<double[], double[]> listOfAll_D1_2_and_D2_2
+        )
+    {
+        // t1, t2 can be multithreaded! (2 threads)
+        double t1 = sum_of_deltas(listOfAll_D1_1_and_D2_1.Item1, listOfAll_D1_2_and_D2_2.Item1);
+        double t2 = sum_of_deltas(listOfAll_D1_1_and_D2_1.Item2, listOfAll_D1_2_and_D2_2.Item2);
+        return new Tuple<double, double>(t1, t2);
+    }
+
+    private static Tuple<double[], double[]> GetQueenAndKingDistances(HashSet<Indices> PlayerQueens, HashSet<Indices> BlockingTiles)
+    {
+        List<Tuple<double[,], double[,]>> possibleBoards = new List<Tuple<double[,], double[,]>>();
+        foreach (Indices Queen in PlayerQueens)
+        {
+            Tuple<double[,], double[,]> minBoardForQueen = FindShortestRoutes(Queen.i, Queen.j, BlockingTiles);
+            possibleBoards.Add(minBoardForQueen);
+        }
+
+        Tuple<double[,], double[,]> minIntersection = FindMinimumIntersection(possibleBoards);
+        Tuple<double[], double[]> minIntersectionAsOneDimensionalArray = TupleTwoDimensionalToTupleOneDimensional(minIntersection);
+
+        return new Tuple<double[], double[]>(minIntersectionAsOneDimensionalArray.Item1, minIntersectionAsOneDimensionalArray.Item2);
+    }
+
+    private static Tuple<double[,], double[,]> FindShortestRoutes(int i, int j, HashSet<Indices> BlockingTiles)
+    {
+        int n = GameBoardInformation.rows;
+        int m = GameBoardInformation.columns;
+        double[,] kingMoveBoard = new double[n, m];
+        double[,] queenMoveBoard = new double[n, m];
+
+        for (int row = 0; row < n; ++row)
+        {
+            for (int col = 0; col < m; ++col)
+            {
+                kingMoveBoard[row, col] = double.PositiveInfinity;
+                queenMoveBoard[row, col] = double.PositiveInfinity;
+            }
+        }
+
+        kingMoveBoard[i, j] = 0;
+        queenMoveBoard[i, j] = 0;
+        FindShortestRoutesHelper(kingMoveBoard, queenMoveBoard, BlockingTiles, new List<Indices>() { new Indices(i, j) }, 1);
+
+        return new Tuple<double[,], double[,]>(kingMoveBoard, queenMoveBoard);
+    }
+
+    public static void PrintBoardValues(int ii, int jj, double[,] board)
+    {
+        string str = "board on" + new Indices(ii,jj).ToString() + "=\n";
+        for (int i = 0; i < board.GetLength(0); ++i)
+        {
+            for (int j = 0; j < board.GetLength(1); ++j)
+            {
+                str += board[i, j] + "\t";
+            }
+            str += "\n";
+        }
+
+        Debug.Log(str);
+    }
+
+    public static void FindShortestRoutesHelper(double[,] kingMoveBoard, double[,] queenMoveBoard, HashSet<Indices> BlockingTiles, List<Indices> recentlyChanged, int moveNumber)
+    {
+        List<Indices> newRecentlyChanged = new List<Indices>();
+        foreach (Indices currentLocation in recentlyChanged)
+        {
+            for (int i_dir = -1; i_dir <= 1; ++i_dir)
+            {
+                for (int j_dir = -1; j_dir <= 1; ++j_dir)
+                {
+                    if (i_dir == 0 && j_dir == 0) continue; // such direction doesn't exist
+
+                    int current_i = currentLocation.i, current_j = currentLocation.j;
+                    int distance = (int)kingMoveBoard[current_i, current_j] + 1;
+
+                    // in order to make sure we don't try to move at the current location which makes no sense
+                    current_i += i_dir; current_j += j_dir;
+
+                    while (0 <= current_i  && current_i < GameBoardInformation.rows
+                        && 0 <= current_j && current_j < GameBoardInformation.columns)
+                    {
+                        if (BlockingTiles.Contains(new Indices(current_i, current_j)) == true)
+                        {
+                            // if its blocked, no reason to continue.
+                            break;
+                        }
+
+                        bool hasChanged = false;
+
+                        if (distance < kingMoveBoard[current_i, current_j])
+                        {
+                            kingMoveBoard[current_i, current_j] = distance;
+                            hasChanged = true;
+                        }
+
+                        if (moveNumber < queenMoveBoard[current_i, current_j])
+                        {
+                            queenMoveBoard[current_i, current_j] = moveNumber;
+                            hasChanged = true;
+                        }
+
+                        if (hasChanged)
+                        {
+                            newRecentlyChanged.Add(new Indices(current_i, current_j));
+                        }
+
+                        // update distance from start, and update the new location
+                        ++distance;
+                        current_i += i_dir;
+                        current_j += j_dir;
+                    }
+                }
+            }
+        }
+
+        // we stop when newRecentlyChanged.Count = 0 !
+        if (newRecentlyChanged.Count > 0)
+            FindShortestRoutesHelper(kingMoveBoard, queenMoveBoard, BlockingTiles, newRecentlyChanged, moveNumber + 1);
+    }
+
+    private static Tuple<double[,], double[,]> FindMinimumIntersection(List<Tuple<double[,], double[,]>> boards)
+    {
+        int n = boards[0].Item1.GetLength(0);
+        int m = boards[0].Item1.GetLength(1);
+        double[,] board1 = new double[n, m];
+        double[,] board2 = new double[n, m];
+
+        for (int i = 0; i < n; ++i)
+        {
+            for (int j = 0; j < m; ++j)
+            {
+                board1[i, j] = double.PositiveInfinity;
+                board2[i, j] = double.PositiveInfinity;
+            }
+        }
+
+        foreach (Tuple<double[,], double[,]> kingAndqueenBoard in boards)
+        {
+            double[,] kingBoard = kingAndqueenBoard.Item1;
+            double[,] queenBoard = kingAndqueenBoard.Item2;
+            for (int i = 0; i < n; ++i)
+            {
+                for (int j = 0; j < m; ++j)
+                {
+                    if (kingBoard[i, j] < board1[i, j]) board1[i, j] = kingBoard[i, j];
+                    if (queenBoard[i, j] < board2[i, j]) board2[i, j] = queenBoard[i, j];
+                }
+            }
+        }
+
+        return new Tuple<double[,], double[,]>(board1, board2);
+    }
+
+    // source: https://stackoverflow.com/questions/5132397/fast-way-to-convert-a-two-dimensional-array-to-a-list-one-dimensional
+    private static Tuple<double[], double[]> TupleTwoDimensionalToTupleOneDimensional(Tuple<double[,], double[,]> TupleTwoDimensional)
+    {
+        // first item to 1D array
+        double[] tmp1 = new double[TupleTwoDimensional.Item1.GetLength(0) * TupleTwoDimensional.Item1.GetLength(1)];
+        Buffer.BlockCopy(TupleTwoDimensional.Item1, 0, tmp1, 0, tmp1.Length * sizeof(double));
+
+        // second item to 1D array
+        double[] tmp2 = new double[TupleTwoDimensional.Item2.GetLength(0) * TupleTwoDimensional.Item2.GetLength(1)];
+        Buffer.BlockCopy(TupleTwoDimensional.Item2, 0, tmp2, 0, tmp2.Length * sizeof(double));
+
+        return new Tuple<double[], double[]>(tmp1, tmp2);
+    }
+
+    // TODO: can be threaded! (can have 3 parts of the sum and then sum them together)
+    private static double sum_of_deltas(double[] listOf_D_i_1, double[] listOf_D_i_2)
+    {
+        double sum = 0;
+        for (int from = 0, until = listOf_D_i_1.Length; from < until; ++from)
+        {
+            if (listOf_D_i_1[from] == double.PositiveInfinity) continue;
+            sum += delta(listOf_D_i_1[from], listOf_D_i_2[from]);
+        }
+        return sum;
+    }
+
+    // it was suggested that K should satisfy: K <=0.2.
+    // garauntees a random value of K s.t: 0.1 <= |K| <= 0.2
+    private static double K = (new System.Random().NextDouble()*0.1 + 0.1)*(new System.Random().NextDouble() < 0.5 ? 1 : -1);
+    private static double delta(double di1a, double di2a)
+    {
+        if (di1a == di2a) return K;
+        if (di1a < di2a) return 1;
+        return -1;
+    }
+
+    private static Tuple<double, double> GetCs(
+        double[] listOfAll_D1_1,
+        double[] listOfAll_D1_2,
+        double[] listOfAll_D2_2,
+        double[] listOfAll_D2_1
+        )
+    {
+
+        double c1 = 0;
+        // TODO: Can multithread these for loops!
+        for (int i = 0, until = listOfAll_D1_1.Length; i < until; ++i)
+        {
+            if (listOfAll_D1_1[i] == double.PositiveInfinity) continue;
+            c1 += GetDifferenceBetween(Math.Pow(2, -listOfAll_D1_1[i]), Math.Pow(2, -listOfAll_D1_2[i]));
+        }
+        c1 = 2 * c1;
+
+        double c2 = 0;
+        for (int i = 0, until = listOfAll_D2_2.Length; i < until; ++i)
+        {
+            double diff = GetDifferenceBetween(listOfAll_D2_2[i], listOfAll_D2_1[i]);
+            c2 += Math.Min(1.0, Math.Max(-1, diff / 6));
+        }
+
+        return new Tuple<double, double>(c1, c2);
+    }
+
+    private static double GetDifferenceBetween(double a, double b)
+    {
+        if (a == double.PositiveInfinity)
+        {
+            if (b == double.PositiveInfinity)
+            {
+                return 0;
+            }
+            else
+            {
+                return a - b;
+            }
+        }
+        else if (a == double.NegativeInfinity)
+        {
+            if (b == double.NegativeInfinity)
+            {
+                return 0;
+            }
+            else
+            {
+                return a - b;
+            }
+        }
+        else
+        {
+            return a - b;
+        }
+    }
+
+    private static readonly int ManyMoves = (int)(GameBoardInformation.rows * GameBoardInformation.columns * 0.5);
+    private static readonly int ModerateMoves = (int)(GameBoardInformation.rows * GameBoardInformation.columns * 0.35);
+    // important: f1+f2+f3+f4 = 1.0
+    private static Tuple<double, double, double, double> GetFs(int numberOfMoves)
+    {
+        Debug.Log(ManyMoves);
+        Debug.Log(ModerateMoves);
+        // TODO: use w.
+        double f1, f2, f3, f4;
+        if (numberOfMoves >= ManyMoves) // num of moves very high
+        {
+            f1 = 0.8;
+            f2 = 0.05;
+            f3 = 0.05;
+        }
+        else if (numberOfMoves >= ModerateMoves) // num of moves very low
+        {
+            f1 = 0.2;
+            f2 = 0.35;
+            f3 = 0.35;
+        }
+        else // num of moves are very low
+        {
+            f1 = 0.1;
+            f2 = 0.1;
+            f3 = 0.1;
+        }
+        f4 = 1 - f1 - f2 - f3;
+
+        return new Tuple<double, double, double, double>(f1, f2, f3, f4);
+    }
+
+
+
+    private Piece Winner()
+    {
+        bool doesWhiteHaveFreeQueen = false;
+        foreach (Indices indices in WhiteQueens)
+        {
+            if (isQueenSurrounded(indices.i, indices.j) == false)
+            {
+                doesWhiteHaveFreeQueen = true;
+                break;
+            }
+        }
+
+        bool doesBlackHaveFreeQueen = false;
+        foreach (Indices indices in BlackQueens)
+        {
+            if (isQueenSurrounded(indices.i, indices.j) == false)
+            {
+                doesBlackHaveFreeQueen = true;
+            }
+        }
+
+        if (doesWhiteHaveFreeQueen == true)
+        {
+            if (doesBlackHaveFreeQueen == false) return Piece.WHITEQUEEN;
+            else return Piece.EMPTY;
+        }
+        else
+        {
+            if (doesBlackHaveFreeQueen == true) return Piece.BLACKQUEEN;
+            else return Piece.EMPTY;
+        }
+    }
+
+    // Note: Assumes that i,j is a queen
+    private bool isQueenSurrounded(int i, int j)
+    {
+        for (int k = -1; k <= 1; ++k)
+        {
+            for (int m = -1; m <= 1; ++m)
+            {
+                if (!WhiteQueens.Contains(new Indices(i + k, j + m)) &&
+                    !BlackQueens.Contains(new Indices(i + k, j + m)) &&
+                    !BurnedTiles.Contains(new Indices(i + k, j + m)))
+                {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 }
 
@@ -413,8 +801,8 @@ public sealed class AILogic : PlayerLogic
     private PlayerMove ThinkThenDecide()
     {
         // explore the tree
-        //currentState.Expand();
-        currentState.ExpandDFS(2);
+        currentState.Expand();
+        //currentState.ExpandDFS(2);
 
         // play your move
         GameState playState = FindBestMove();
