@@ -49,10 +49,52 @@ public static class GameBoardInformation
     }
 
 
-    public static int ManyMoves { get => (int)(rows * columns * 0.50); }
-    public static int ModerateMoves { get => (int)(rows * columns * 0.35); }
-    public static int VeryEarlyInTheGame { get => (int)(rows * columns * 0.1); }
+    public static int ManyMoves { get => (int)(rows * columns * GetPercentage(MoveQuantity.MANY)); }
+    public static int ModerateMoves { get => (int)(rows * columns * GetPercentage(MoveQuantity.MODERATE)); }
+    public static int VeryEarlyInTheGame { get => (int)(rows * columns * GetPercentage(MoveQuantity.FEW)); }
 
+    private enum MoveQuantity
+    {
+        MANY,
+        MODERATE,
+        FEW
+    }
+    private static double GetPercentage(MoveQuantity quantity)
+    {
+        if (InitializingParameters.numberOfAIs == 2)
+        {
+            if (rows == 10)
+            {
+                if (quantity == MoveQuantity.MANY) return 0.45;
+                if (quantity == MoveQuantity.MODERATE) return 0.2;
+                if (quantity == MoveQuantity.FEW) return 0.1;
+            }
+            else
+            {
+                if (quantity == MoveQuantity.MANY) return 0.45;
+                if (quantity == MoveQuantity.MODERATE) return 0.2;
+                if (quantity == MoveQuantity.FEW) return 0.1;
+            }
+        }
+        else
+        {
+            if (rows == 10)
+            {
+                if (quantity == MoveQuantity.MANY) return 0.55;
+                if (quantity == MoveQuantity.MODERATE) return 0.25;
+                if (quantity == MoveQuantity.FEW) return 0.15;
+            }
+            else
+            {
+                if (quantity == MoveQuantity.MANY) return 0.45;
+                if (quantity == MoveQuantity.MODERATE) return 0.15;
+                if (quantity == MoveQuantity.FEW) return 0.1;
+            }
+        }
+
+        // should never happen
+        return 0.1;
+    }
 
 
     public static void reset()

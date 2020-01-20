@@ -3,6 +3,7 @@ using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Threading;
 
 public static class GameTree
 {
@@ -195,10 +196,21 @@ public class GameState
         // if we have already expanded the current state, then try to expand its children. skip expanding again.
         else if (currentState.IsFullyExpanded)
         {
+            List<Thread> threads = new List<Thread>();
             foreach (GameState child in currentState.Children)
             {
-                ExpandDFS(child, additionalDepth - 1);
+                var thread = new Thread(() =>
+                {
+                    ExpandDFS(child, additionalDepth - 1);
+                });
+                threads.Add(thread);
+                thread.Start();
             }
+            foreach (Thread thread in threads)
+            {
+                thread.Join();
+            }
+
             return;
         }
         // if the state hasn't expanded already, then expand with the depth.
@@ -210,9 +222,19 @@ public class GameState
             else
                 Queens.UnionWith(currentState.BlackQueens);
 
+            List<Thread> threads = new List<Thread>();
             foreach (Indices queenIndex in Queens)
             {
-                UpdateWithEveryLegalMoveAtDepth(currentState, queenIndex, additionalDepth);
+                var thread = new Thread(() =>
+                {
+                    UpdateWithEveryLegalMoveAtDepth(currentState, queenIndex, additionalDepth);
+                });
+                threads.Add(thread);
+                thread.Start();
+            }
+            foreach (Thread thread in threads)
+            {
+                thread.Join();
             }
         }
     }
@@ -246,18 +268,25 @@ public class GameState
             {
                 if (i_direction == 0 && j_direction == 0)
                     continue;
+                bool shouldPrune = false;
 
-                bool shouldPrune = GetEveryLegalMoveInGivenDirection(currentState, startingIndex.i, startingIndex.j, i_direction, j_direction, new HashSet<Indices>(currentWhiteQueens), new HashSet<Indices>(currentBlackQueens), new HashSet<Indices>(currentBurnedTiles), queen_started_at_i, queen_started_at_j, isQueenIndex, additionalDepth);
+                shouldPrune = GetEveryLegalMoveInGivenDirection(currentState, startingIndex.i, startingIndex.j, i_direction, j_direction, new HashSet<Indices>(currentWhiteQueens), new HashSet<Indices>(currentBlackQueens), new HashSet<Indices>(currentBurnedTiles), queen_started_at_i, queen_started_at_j, isQueenIndex, additionalDepth);
 
-                // consider alpha-beta pruning
-                if (shouldPrune)
+                lock (currentState)
                 {
-                    isFullyExpanded = false;
-                    break;
+                    // consider alpha-beta pruning
+                    if (shouldPrune)
+                    {
+                        isFullyExpanded = false;
+                    }
                 }
+                if (shouldPrune) break;
             }
         }
-        currentState.IsFullyExpanded = isFullyExpanded;
+        lock (currentState)
+        {
+            currentState.IsFullyExpanded = isFullyExpanded;
+        }
     }
 
     // returns true if we should perform alpha-beta pruning!
@@ -329,14 +358,21 @@ public class GameState
                     oldBurnLocation = mid_way_index; // update this to be the last location which burned.
 
                     // Add a single gamestate
-                    GameState child = new GameState(new HashSet<Indices>(currentWhiteQueens), new HashSet<Indices>(currentBlackQueens), newBurnIndices, currentState.depth + 1, currentState, new PlayerMove(currentState.isWhiteTurn ? Piece.WHITEQUEEN : Piece.BLACKQUEEN, queen_started_at_i, queen_started_at_j, initial_i, initial_j, mid_way_index.i, mid_way_index.j));
-                    currentState.Children.Add(child);
+                    GameState child = null;
+                    lock (currentState.Children)
+                    {
+                        child = new GameState(new HashSet<Indices>(currentWhiteQueens), new HashSet<Indices>(currentBlackQueens), newBurnIndices, currentState.depth + 1, currentState, new PlayerMove(currentState.isWhiteTurn ? Piece.WHITEQUEEN : Piece.BLACKQUEEN, queen_started_at_i, queen_started_at_j, initial_i, initial_j, mid_way_index.i, mid_way_index.j));
+                        currentState.Children.Add(child);
+                    }
                     child.ExpandDFS(additionalDepth - 1); // go to the next depth, this line garauntees DFS procedure.
-
                     // child should have a heuristic value at this point, and the parent should 
                     // have their heuristic updated as required by minimax
-                    currentState.EvaluateHeuristicAsParent(child.HeuristicValue);
-                    bool shouldPrune = CheckIfAlphaBetaPruningIsPossible(currentState);
+                    bool shouldPrune = false;
+                    lock (currentState)
+                    {
+                        currentState.EvaluateHeuristicAsParent(child.HeuristicValue);
+                        shouldPrune = CheckIfAlphaBetaPruningIsPossible(currentState);
+                    }
                     if (shouldPrune)
                         return true;
                 }
@@ -472,9 +508,19 @@ public class GameState
         HashSet<Indices> BlockingTiles
         )
     {
-        // these couple of lines can be multithreaded
-        Tuple<double[], double[]> listOfAll_D1_1_and_D2_1 = GetQueenAndKingDistances(WhiteQueens, BlockingTiles);
-        Tuple<double[], double[]> listOfAll_D1_2_and_D2_2 = GetQueenAndKingDistances(BlackQueens, BlockingTiles);
+        Tuple<double[], double[]> listOfAll_D1_1_and_D2_1 = null;
+        var thread1 = new Thread(() => {
+            listOfAll_D1_1_and_D2_1 = GetQueenAndKingDistances(WhiteQueens, BlockingTiles);
+        });
+        Tuple<double[], double[]> listOfAll_D1_2_and_D2_2 = null;
+        var thread2 = new Thread(() => {
+            listOfAll_D1_2_and_D2_2 = GetQueenAndKingDistances(BlackQueens, BlockingTiles);
+        });
+
+        thread1.Start();
+        thread2.Start();
+        thread1.Join();
+        thread2.Join();
 
         Tuple<double, double> t1_t2_w = GetTs(listOfAll_D1_1_and_D2_1, listOfAll_D1_2_and_D2_2);
         double t1 = t1_t2_w.Item1, t2 = t1_t2_w.Item2;
@@ -503,9 +549,20 @@ public class GameState
         Tuple<double[], double[]> listOfAll_D1_2_and_D2_2
         )
     {
-        // t1, t2 can be multithreaded! (2 threads)
-        double t1 = sum_of_deltas(listOfAll_D1_1_and_D2_1.Item1, listOfAll_D1_2_and_D2_2.Item1);
-        double t2 = sum_of_deltas(listOfAll_D1_1_and_D2_1.Item2, listOfAll_D1_2_and_D2_2.Item2);
+        double t1 = 0;
+        var thread1 = new Thread(() => {
+            t1 = sum_of_deltas(listOfAll_D1_1_and_D2_1.Item1, listOfAll_D1_2_and_D2_2.Item1);
+        });
+
+        double t2 = 0;
+        var thread2 = new Thread(() => {
+            t2 = sum_of_deltas(listOfAll_D1_1_and_D2_1.Item2, listOfAll_D1_2_and_D2_2.Item2);
+        });
+
+        thread1.Start();
+        thread2.Start();
+        thread1.Join();
+        thread2.Join();
         return new Tuple<double, double>(t1, t2);
     }
 
@@ -699,20 +756,31 @@ public class GameState
     {
 
         double c1 = 0;
-        // TODO: Can multithread these for loops!
-        for (int i = 0, until = listOfAll_D1_1.Length; i < until; ++i)
+        var thread1 = new Thread(() =>
         {
-            if (listOfAll_D1_1[i] == double.PositiveInfinity) continue;
-            c1 += GetDifferenceBetween(Math.Pow(2, -listOfAll_D1_1[i]), Math.Pow(2, -listOfAll_D1_2[i]));
-        }
-        c1 = 2 * c1;
+            for (int i = 0, until = listOfAll_D1_1.Length; i < until; ++i)
+            {
+                if (listOfAll_D1_1[i] == double.PositiveInfinity) continue;
+                c1 += GetDifferenceBetween(Math.Pow(2, -listOfAll_D1_1[i]), Math.Pow(2, -listOfAll_D1_2[i]));
+            }
+            c1 = 2 * c1;
+        });
+
 
         double c2 = 0;
-        for (int i = 0, until = listOfAll_D2_2.Length; i < until; ++i)
+        var thread2 = new Thread(() =>
         {
-            double diff = GetDifferenceBetween(listOfAll_D2_2[i], listOfAll_D2_1[i]);
-            c2 += Math.Min(1.0, Math.Max(-1, diff / 6));
-        }
+            for (int i = 0, until = listOfAll_D2_2.Length; i < until; ++i)
+            {
+                double diff = GetDifferenceBetween(listOfAll_D2_2[i], listOfAll_D2_1[i]);
+                c2 += Math.Min(1.0, Math.Max(-1, diff / 6));
+            }
+        });
+
+        thread1.Start();
+        thread2.Start();
+        thread1.Join();
+        thread2.Join();
 
         return new Tuple<double, double>(c1, c2);
     }
@@ -747,7 +815,7 @@ public class GameState
         }
     }
 
-    // important: f1+f2+f3+f4 = 1.0
+    // important: f1+f2+f3+f4 = 1.0, fi>=0.
     private static Tuple<double, double, double, double> GetFs(int numberOfMoves)
     {
         // TODO: use w.
@@ -847,7 +915,6 @@ public sealed class AILogic : PlayerLogic
     private PlayerMove ThinkThenDecide()
     {
         // explore the tree
-        //currentState.Expand();
         if (currentState.depth >= GameBoardInformation.ManyMoves)
         {
             currentState.ExpandDFS(3);
