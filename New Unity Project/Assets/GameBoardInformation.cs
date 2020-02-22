@@ -52,6 +52,9 @@ public static class GameBoardInformation
     public static int ManyMoves { get => (int)(rows * columns * GetPercentage(MoveQuantity.MANY)); }
     public static int ModerateMoves { get => (int)(rows * columns * GetPercentage(MoveQuantity.MODERATE)); }
     public static int VeryEarlyInTheGame { get => (int)(rows * columns * GetPercentage(MoveQuantity.FEW)); }
+    public static bool IsLargeGame { get => rows * columns == 100; }
+    public static bool ShouldCutOffDepth { get => IsLargeGame ? (new System.Random().NextDouble() <= 0.40) : (new System.Random().NextDouble() <= 0.30); } // 1.0 means 100% cutoff (rule: p means p cutoff)
+    public static bool ShouldCutOffSiblings { get => IsLargeGame ? (new System.Random().NextDouble() <= 0.60) : (new System.Random().NextDouble() <= 0.90); } // 1.0 means 0% cutoff (rule: p means 1-p cutoff)
 
     private enum MoveQuantity
     {

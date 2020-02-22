@@ -357,27 +357,41 @@ public class GameState
                     newBurnIndices.Add(mid_way_index);
                     oldBurnLocation = mid_way_index; // update this to be the last location which burned.
 
-                    // Add a single gamestate
-                    GameState child = null;
-                    lock (currentState.Children)
+                    // Consider cutting off the children!
+                    if (currentState.Children.Count == 0 || GameBoardInformation.ShouldCutOffSiblings)
                     {
-                        child = new GameState(new HashSet<Indices>(currentWhiteQueens), new HashSet<Indices>(currentBlackQueens), newBurnIndices, currentState.depth + 1, currentState, new PlayerMove(currentState.isWhiteTurn ? Piece.WHITEQUEEN : Piece.BLACKQUEEN, queen_started_at_i, queen_started_at_j, initial_i, initial_j, mid_way_index.i, mid_way_index.j));
-                        currentState.Children.Add(child);
+                        // Add a single gamestate
+                        GameState child = null;
+                        lock (currentState.Children)
+                        {
+                            child = new GameState(new HashSet<Indices>(currentWhiteQueens), new HashSet<Indices>(currentBlackQueens), newBurnIndices, currentState.depth + 1, currentState, new PlayerMove(currentState.isWhiteTurn ? Piece.WHITEQUEEN : Piece.BLACKQUEEN, queen_started_at_i, queen_started_at_j, initial_i, initial_j, mid_way_index.i, mid_way_index.j));
+                            currentState.Children.Add(child);
+                        }
+
+                        // consider eliminating children via random evaluation
+                        // Unfortunately, this is important due to the exploding time and space complexity of our problem
+                        // Notice: This isn't really needed in the small version of the game, and thus there is no cutoff in that case.
+                        int newAdditionalDepth = additionalDepth - 1; // the real depth without cutoff
+                        if (newAdditionalDepth > 0 && GameBoardInformation.ShouldCutOffDepth)
+                        {
+                            newAdditionalDepth = 0; // ignore all other depth, causing the tree to become unbalanced, but less expensive.
+                        }
+                        child.ExpandDFS(newAdditionalDepth); // go to the next depth, this line garauntees DFS procedure.
+                                                             // child should have a heuristic value at this point, and the parent should 
+                                                             // have their heuristic updated as required by minimax
+                        bool shouldPrune = false;
+                        lock (currentState)
+                        {
+                            currentState.EvaluateHeuristicAsParent(child.HeuristicValue);
+                            shouldPrune = CheckIfAlphaBetaPruningIsPossible(currentState);
+                        }
+                        if (shouldPrune)
+                            return true;
                     }
-                    child.ExpandDFS(additionalDepth - 1); // go to the next depth, this line garauntees DFS procedure.
-                    // child should have a heuristic value at this point, and the parent should 
-                    // have their heuristic updated as required by minimax
-                    bool shouldPrune = false;
-                    lock (currentState)
-                    {
-                        currentState.EvaluateHeuristicAsParent(child.HeuristicValue);
-                        shouldPrune = CheckIfAlphaBetaPruningIsPossible(currentState);
-                    }
-                    if (shouldPrune)
-                        return true;
                 }
             }
         }
+
 
         return false;
     }
@@ -433,13 +447,13 @@ public class GameState
         else if (winner == Piece.BLACKQUEEN) HeuristicValue = double.NegativeInfinity;
         else
         {
-            if (depth <= GameBoardInformation.VeryEarlyInTheGame)
-                HeuristicValue = FastEvaluation(WhiteQueens, BlackQueens, BurnedTiles);
-            else
-                HeuristicValue = TerritorialMobility(WhiteQueens, BlackQueens, BurnedTiles);
+            HeuristicValue = TerritorialMobility(WhiteQueens, BlackQueens, BurnedTiles);
         }
     }
 
+    // This Heuristic is cancelled, but I am going to keep the code anyways since the project is almost done, and having this as the only spaghetti code isn't such a big deal
+    // The reason it was cancelled is because we were able to achieve a good timing on the other, more accurate heuristic (Territory Mobility).
+    // Despite these comments, it might still prove useful when I introduce *time* as a factor agaist this AI.
     private static double FastEvaluation(HashSet<Indices> whiteQueens, HashSet<Indices> blackQueens, HashSet<Indices> burnedTiles)
     {
         HashSet<Indices> BlockingTiles = new HashSet<Indices>(burnedTiles);
@@ -911,6 +925,9 @@ public sealed class AILogic : PlayerLogic
         MakeMoveOnBoard(lastMove);
         yield break;
     }
+
+    private int RandomBetweenOneAndTwo { get => new System.Random().NextDouble() < 0.3 ? 1 : 2; }
+    private int RandomBetweenTwoAndThree { get => new System.Random().NextDouble() < 0.3 ? 3 : 2; }
 
     private PlayerMove ThinkThenDecide()
     {
