@@ -11,7 +11,7 @@ public static class InitializingParameters
     public static List<Indices> WhiteQueens = new List<Indices>();
     public static List<Indices> BlackQueens = new List<Indices>();
     public static int numberOfAIs = 1; // when this is 1, it means AI vs Player, when this is 2, it means AI vs AI.
-    public static float time = 1000.0f;
+    public static double time = 1000.0f;
 }
 
 
@@ -41,7 +41,7 @@ public class InitializationButtons : MonoBehaviour
         else
             InitializingParameters.numberOfAIs = 1;
 
-        InitializingParameters.time = int.Parse(TimeField.text);
+        InitializingParameters.time = double.Parse(TimeField.text)*60.0;
     }
 
     private void InitializeStandardBoard()

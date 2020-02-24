@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Threading;
 using System.Collections;
 using UnityEngine;
 
@@ -47,9 +49,21 @@ public class PlayerMove
         burnLocation = new Indices(burn_i, burn_j);
     }
 
+    // for debugging
     public override string ToString()
     {
         return "from:" + oldLocation.ToString() + ", to:" + newLocation.ToString() + ", burn:" + burnLocation.ToString();
+    }
+
+    // for user-friendly printing
+    public string ToPrintableString()
+    {
+        return IndexToLetter(oldLocation.j) + (GameBoardInformation.rows - 1 - oldLocation.i) + "-" + IndexToLetter(newLocation.j) + (GameBoardInformation.rows - 1 - newLocation.i) + "/" + IndexToLetter(burnLocation.j) + (GameBoardInformation.rows - 1 - burnLocation.i);
+    }
+
+    private static string IndexToLetter(int x)
+    {
+        return ((char)('A' + (char)x)).ToString();
     }
 }
 
@@ -62,6 +76,7 @@ public abstract class PlayerLogic: MonoBehaviour
     protected readonly int playerTurnIndex; // this is the player's turn index, it does not change throughout the game
     protected bool finishedMove;
     protected PlayerMove lastMove;
+    protected double secondsPassed = 0;
 
 
     // Player Logic MUST HAVE ONLY Default constructor.
@@ -89,8 +104,12 @@ public abstract class PlayerLogic: MonoBehaviour
         {
             StartCoroutine(MakeMove()); // This is where the player will actually perform the move.
             yield return new WaitUntil(() => finishedMove == true);
+
+
             finishedMove = false; // resets to false, to allow the player to play again
             GameTree.UpdateGameStateAndTree(lastMove);
+            TechnicalStatistics.LastMoveString = TechnicalStatistics.GetLastMoveString(GameTree.head, secondsPassed);
+            TechnicalStatistics.totalTimePassed += secondsPassed;
             GameBoardInformation.updateGameOver();
             globalTurn = (globalTurn + 1) % 2; // increase index to say that it is the other player's turn
             yield return PlayTurn();

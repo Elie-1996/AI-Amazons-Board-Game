@@ -180,6 +180,21 @@ public class GameState
 
     public void ExpandDFS(int additionalDepth) { ExpandDFS(this, additionalDepth); }
 
+    private static Thread NewThread(ThreadStart start)
+    {
+        return new Thread(() =>
+        {
+            ++TechnicalStatistics.ThreadAmount;
+            ++TechnicalStatistics.ConcurrentThreads;
+            if (TechnicalStatistics.ConcurrentThreads > TechnicalStatistics.MaxConcurrentThreads)
+            {
+                TechnicalStatistics.MaxConcurrentThreads = TechnicalStatistics.ConcurrentThreads;
+            }
+            start();
+            --TechnicalStatistics.ConcurrentThreads;        
+        });
+    }
+
     // Reveal all children at depth d+1
     private static void ExpandDFS(GameState currentState, int additionalDepth)
     {
@@ -199,13 +214,13 @@ public class GameState
             List<Thread> threads = new List<Thread>();
             foreach (GameState child in currentState.Children)
             {
-                var thread = new Thread(() =>
-                {
+                var thread = NewThread(() => {
                     ExpandDFS(child, additionalDepth - 1);
                 });
                 threads.Add(thread);
                 thread.Start();
             }
+
             foreach (Thread thread in threads)
             {
                 thread.Join();
@@ -225,7 +240,7 @@ public class GameState
             List<Thread> threads = new List<Thread>();
             foreach (Indices queenIndex in Queens)
             {
-                var thread = new Thread(() =>
+                var thread =  NewThread(() =>
                 {
                     UpdateWithEveryLegalMoveAtDepth(currentState, queenIndex, additionalDepth);
                 });
@@ -277,6 +292,7 @@ public class GameState
                     // consider alpha-beta pruning
                     if (shouldPrune)
                     {
+                        ++TechnicalStatistics.AlphaBetaPruning;
                         isFullyExpanded = false;
                     }
                 }
@@ -358,12 +374,16 @@ public class GameState
                     oldBurnLocation = mid_way_index; // update this to be the last location which burned.
 
                     // Consider cutting off the children!
+                    ++TechnicalStatistics.PrunedSiblings;
+                    ++TechnicalStatistics.TotalWouldBeNodes;
                     if (currentState.Children.Count == 0 || GameBoardInformation.ShouldCutOffSiblings)
                     {
                         // Add a single gamestate
                         GameState child = null;
+                        --TechnicalStatistics.PrunedSiblings;
                         lock (currentState.Children)
                         {
+                            ++TechnicalStatistics.TotalCreatedNodes;
                             child = new GameState(new HashSet<Indices>(currentWhiteQueens), new HashSet<Indices>(currentBlackQueens), newBurnIndices, currentState.depth + 1, currentState, new PlayerMove(currentState.isWhiteTurn ? Piece.WHITEQUEEN : Piece.BLACKQUEEN, queen_started_at_i, queen_started_at_j, initial_i, initial_j, mid_way_index.i, mid_way_index.j));
                             currentState.Children.Add(child);
                         }
@@ -374,6 +394,7 @@ public class GameState
                         int newAdditionalDepth = additionalDepth - 1; // the real depth without cutoff
                         if (newAdditionalDepth > 0 && GameBoardInformation.ShouldCutOffDepth)
                         {
+                            ++TechnicalStatistics.PrunedDepth;
                             newAdditionalDepth = 0; // ignore all other depth, causing the tree to become unbalanced, but less expensive.
                         }
                         child.ExpandDFS(newAdditionalDepth); // go to the next depth, this line garauntees DFS procedure.
@@ -456,6 +477,14 @@ public class GameState
     // Despite these comments, it might still prove useful when I introduce *time* as a factor agaist this AI.
     private static double FastEvaluation(HashSet<Indices> whiteQueens, HashSet<Indices> blackQueens, HashSet<Indices> burnedTiles)
     {
+        Tuple<int, int> tmp = GetAmountOfPossibleMovesForBothParties(whiteQueens, blackQueens, burnedTiles);
+        int whiteMoves = tmp.Item1;
+        int blackMoves = tmp.Item2;
+        return 0.65 * whiteMoves - 0.35 * blackMoves;
+    }
+
+    public static Tuple<int, int> GetAmountOfPossibleMovesForBothParties(HashSet<Indices> whiteQueens, HashSet<Indices> blackQueens, HashSet<Indices> burnedTiles)
+    {
         HashSet<Indices> BlockingTiles = new HashSet<Indices>(burnedTiles);
         BlockingTiles.UnionWith(whiteQueens);
         BlockingTiles.UnionWith(blackQueens);
@@ -464,15 +493,40 @@ public class GameState
         foreach (Indices whiteQueen in whiteQueens)
         {
             whiteMoves += GetAmountOfPossibleMoves(whiteQueen, BlockingTiles);
+            whiteMoves -= IsSurroundedOrAlmost(whiteQueen, BlockingTiles);
         }
 
         int blackMoves = 0;
         foreach (Indices blackQueen in blackQueens)
         {
             blackMoves += GetAmountOfPossibleMoves(blackQueen, BlockingTiles);
+            blackMoves -= IsSurroundedOrAlmost(blackQueen, BlockingTiles);
         }
 
-        return 0.65 * whiteMoves - 0.35 * blackMoves;
+        return new Tuple<int, int>(whiteMoves, blackMoves);
+    }
+
+    private static int IsSurroundedOrAlmost(Indices queen, HashSet<Indices> BlockingTiles)
+    {
+        int start_i = queen.i - 2;
+        int start_j = queen.j - 2;
+        int end_i = queen.i + 2;
+        int end_j = queen.j + 2;
+        if (start_i < 0) start_i = 0;
+        if (start_j < 0) start_j = 0;
+        if (end_i >= GameBoardInformation.rows) end_i = GameBoardInformation.rows - 1;
+        if (end_j >= GameBoardInformation.rows) end_j = GameBoardInformation.columns - 1;
+        double percentage = 0.0;
+        double constant = (end_i - start_i) * (end_j - start_j);
+        for (int i = start_i; i < end_i; ++i)
+        {
+            for (int j = start_j; j < end_j; ++j)
+            {
+                if (BlockingTiles.Contains(new Indices(i, j)) || (queen.i == i && queen.j == j))
+                    percentage += (1 / (double)constant);
+            }
+        }
+        return percentage > 0.5 ? 1 : 0;
     }
 
     private static int GetAmountOfPossibleMoves(Indices queen, HashSet<Indices> BlockingTiles)
@@ -523,11 +577,11 @@ public class GameState
         )
     {
         Tuple<double[], double[]> listOfAll_D1_1_and_D2_1 = null;
-        var thread1 = new Thread(() => {
+        var thread1 = NewThread(() => {
             listOfAll_D1_1_and_D2_1 = GetQueenAndKingDistances(WhiteQueens, BlockingTiles);
         });
         Tuple<double[], double[]> listOfAll_D1_2_and_D2_2 = null;
-        var thread2 = new Thread(() => {
+        var thread2 = NewThread(() => {
             listOfAll_D1_2_and_D2_2 = GetQueenAndKingDistances(BlackQueens, BlockingTiles);
         });
 
@@ -564,12 +618,12 @@ public class GameState
         )
     {
         double t1 = 0;
-        var thread1 = new Thread(() => {
+        var thread1 = NewThread(() => {
             t1 = sum_of_deltas(listOfAll_D1_1_and_D2_1.Item1, listOfAll_D1_2_and_D2_2.Item1);
         });
 
         double t2 = 0;
-        var thread2 = new Thread(() => {
+        var thread2 = NewThread(() => {
             t2 = sum_of_deltas(listOfAll_D1_1_and_D2_1.Item2, listOfAll_D1_2_and_D2_2.Item2);
         });
 
@@ -770,7 +824,7 @@ public class GameState
     {
 
         double c1 = 0;
-        var thread1 = new Thread(() =>
+        var thread1 = NewThread(() =>
         {
             for (int i = 0, until = listOfAll_D1_1.Length; i < until; ++i)
             {
@@ -782,7 +836,7 @@ public class GameState
 
 
         double c2 = 0;
-        var thread2 = new Thread(() =>
+        var thread2 = NewThread(() =>
         {
             for (int i = 0, until = listOfAll_D2_2.Length; i < until; ++i)
             {
@@ -913,7 +967,7 @@ public class GameState
 
 public sealed class AILogic : PlayerLogic
 {
-
+    private static System.Diagnostics.Stopwatch stopWatch = new System.Diagnostics.Stopwatch();
     private GameState currentState;
 
     AILogic() {}
@@ -921,27 +975,45 @@ public sealed class AILogic : PlayerLogic
     protected sealed override IEnumerator MakeMove()
     {
         currentState = GameTree.head;
+        TechnicalStatistics.ThreadAmount = 1;
+        TechnicalStatistics.MaxConcurrentThreads = 1;
+        TechnicalStatistics.LocalDepth = 0;
+        // TODO: Hello
+        stopWatch.Start();
         lastMove = ThinkThenDecide();
+        stopWatch.Stop();
+        secondsPassed = stopWatch.Elapsed.TotalSeconds;
+        stopWatch.Reset();
+        TechnicalStatistics.TotalDepth = GameTree.head.depth;
         MakeMoveOnBoard(lastMove);
         yield break;
     }
 
-    private int RandomBetweenOneAndTwo { get => new System.Random().NextDouble() < 0.3 ? 1 : 2; }
-    private int RandomBetweenTwoAndThree { get => new System.Random().NextDouble() < 0.3 ? 3 : 2; }
+    private System.Random randomizer = new System.Random();
+    private int RandomBetweenOneAndTwo { get => randomizer.NextDouble() < 0.3 ? 1 : 2; }
+    private int RandomBetweenTwoAndThree { get => randomizer.NextDouble() < 0.3 ? 3 : 2; }
 
     private PlayerMove ThinkThenDecide()
     {
         // explore the tree
+        if (currentState.depth >= GameBoardInformation.VeryLateInTheGame)
+        {
+            TechnicalStatistics.LocalDepth = 3;
+            currentState.ExpandDFS(3);
+        }
         if (currentState.depth >= GameBoardInformation.ManyMoves)
         {
+            TechnicalStatistics.LocalDepth = 3;
             currentState.ExpandDFS(3);
         }
         else if (currentState.depth >= GameBoardInformation.ModerateMoves)
         {
+            TechnicalStatistics.LocalDepth = 2;
             currentState.ExpandDFS(2);
         }
         else
         {
+            TechnicalStatistics.LocalDepth = 1;
             currentState.Expand();
         }
 

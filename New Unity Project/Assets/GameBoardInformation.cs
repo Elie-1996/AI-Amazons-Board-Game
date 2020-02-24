@@ -49,15 +49,18 @@ public static class GameBoardInformation
     }
 
 
+    private static System.Random randomizer = new System.Random();
+    public static int VeryLateInTheGame { get => (int)(rows * columns * GetPercentage(MoveQuantity.VERYMANY)); }
     public static int ManyMoves { get => (int)(rows * columns * GetPercentage(MoveQuantity.MANY)); }
     public static int ModerateMoves { get => (int)(rows * columns * GetPercentage(MoveQuantity.MODERATE)); }
     public static int VeryEarlyInTheGame { get => (int)(rows * columns * GetPercentage(MoveQuantity.FEW)); }
     public static bool IsLargeGame { get => rows * columns == 100; }
-    public static bool ShouldCutOffDepth { get => IsLargeGame ? (new System.Random().NextDouble() <= 0.40) : (new System.Random().NextDouble() <= 0.30); } // 1.0 means 100% cutoff (rule: p means p cutoff)
-    public static bool ShouldCutOffSiblings { get => IsLargeGame ? (new System.Random().NextDouble() <= 0.60) : (new System.Random().NextDouble() <= 0.90); } // 1.0 means 0% cutoff (rule: p means 1-p cutoff)
+    public static bool ShouldCutOffDepth { get => IsLargeGame ? (randomizer.NextDouble() <= 0.40) : (randomizer.NextDouble() <= 0.30); } // 1.0 means 100% cutoff (rule: p means p cutoff)
+    public static bool ShouldCutOffSiblings { get => IsLargeGame ? (randomizer.NextDouble() <= 0.50) : (randomizer.NextDouble() <= 0.70); } // 1.0 means 0% cutoff (rule: p means 1-p cutoff)
 
     private enum MoveQuantity
     {
+        VERYMANY,
         MANY,
         MODERATE,
         FEW
@@ -68,12 +71,14 @@ public static class GameBoardInformation
         {
             if (rows == 10)
             {
+                if (quantity == MoveQuantity.VERYMANY) return 0.65;
                 if (quantity == MoveQuantity.MANY) return 0.45;
                 if (quantity == MoveQuantity.MODERATE) return 0.2;
                 if (quantity == MoveQuantity.FEW) return 0.1;
             }
             else
             {
+                if (quantity == MoveQuantity.VERYMANY) return 0.65;
                 if (quantity == MoveQuantity.MANY) return 0.45;
                 if (quantity == MoveQuantity.MODERATE) return 0.2;
                 if (quantity == MoveQuantity.FEW) return 0.1;
@@ -83,12 +88,14 @@ public static class GameBoardInformation
         {
             if (rows == 10)
             {
+                if (quantity == MoveQuantity.VERYMANY) return 0.75;
                 if (quantity == MoveQuantity.MANY) return 0.55;
                 if (quantity == MoveQuantity.MODERATE) return 0.25;
                 if (quantity == MoveQuantity.FEW) return 0.15;
             }
             else
             {
+                if (quantity == MoveQuantity.VERYMANY) return 0.65;
                 if (quantity == MoveQuantity.MANY) return 0.45;
                 if (quantity == MoveQuantity.MODERATE) return 0.15;
                 if (quantity == MoveQuantity.FEW) return 0.1;
@@ -292,6 +299,20 @@ public static class GameBoardInformation
         if (isGameOver)
         {
             Winner = doesBlackHaveFreeQueen == true ? Piece.BLACKQUEEN : Piece.WHITEQUEEN;
+        }
+
+        // in case the timer runs out....
+        if (InitializingParameters.time - TechnicalStatistics.totalTimePassed <= 0)
+        {
+            isGameOver = true;
+            if (InitializingParameters.numberOfAIs == 1)
+            {
+                Winner = Piece.WHITEQUEEN;
+            }
+            else
+            {
+                Winner = Piece.EMPTY;
+            }
         }
     }
 
