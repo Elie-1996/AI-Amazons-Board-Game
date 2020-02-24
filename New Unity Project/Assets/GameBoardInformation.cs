@@ -48,6 +48,28 @@ public static class GameBoardInformation
         get => board.GetLength(1);
     }
 
+    private static double secondLast = 70.0;
+    // this function is linear between 13.33 -> 96.66, where 13.33 = 1, 96.66 = 0.
+    private static double DecideCutOff(double x)
+    {
+        double temp = x;
+        x = 0.5*x + 0.5*secondLast;
+        secondLast = temp;
+        double result = 0.0;
+        if (Math.Abs(GameTree.head.depth - ModerateMoves) <= 1) result = 0.2;
+        else
+        if (x > 80) result = 0.1;
+        else if (x < 14)
+        {
+            if (GameTree.head.depth >= VeryEarlyInTheGame)
+                result = 0.8;
+            else
+                result = 0.1;
+        }
+        else result = -0.012 * x + 1.16;
+        Debug.Log("res(" + x + ")=" + result);
+        return result;
+    }
 
     private static System.Random randomizer = new System.Random();
     public static int VeryLateInTheGame { get => (int)(rows * columns * GetPercentage(MoveQuantity.VERYMANY)); }
@@ -55,8 +77,8 @@ public static class GameBoardInformation
     public static int ModerateMoves { get => (int)(rows * columns * GetPercentage(MoveQuantity.MODERATE)); }
     public static int VeryEarlyInTheGame { get => (int)(rows * columns * GetPercentage(MoveQuantity.FEW)); }
     public static bool IsLargeGame { get => rows * columns == 100; }
-    public static bool ShouldCutOffDepth { get => IsLargeGame ? (randomizer.NextDouble() <= 0.40) : (randomizer.NextDouble() <= 0.30); } // 1.0 means 100% cutoff (rule: p means p cutoff)
-    public static bool ShouldCutOffSiblings { get => IsLargeGame ? (randomizer.NextDouble() <= 0.50) : (randomizer.NextDouble() <= 0.70); } // 1.0 means 0% cutoff (rule: p means 1-p cutoff)
+    public static bool ShouldCutOffDepth { get => IsLargeGame ? (randomizer.NextDouble() <= 0.80) : (randomizer.NextDouble() <= 0.30); } // 1.0 means 100% cutoff (rule: p means p cutoff)
+    public static bool ShouldCutOffSiblings { get => IsLargeGame ? (randomizer.NextDouble() <= DecideCutOff(TechnicalStatistics.timePassedLastTime)) : (randomizer.NextDouble() <= 0.70); } // 1.0 means 0% cutoff (rule: p means 1-p cutoff)
 
     private enum MoveQuantity
     {

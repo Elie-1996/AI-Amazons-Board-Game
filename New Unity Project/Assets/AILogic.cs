@@ -376,7 +376,7 @@ public class GameState
                     // Consider cutting off the children!
                     ++TechnicalStatistics.PrunedSiblings;
                     ++TechnicalStatistics.TotalWouldBeNodes;
-                    if (currentState.Children.Count == 0 || GameBoardInformation.ShouldCutOffSiblings)
+                    if (currentState.Children.Count == 0 || (GameBoardInformation.ShouldCutOffSiblings && (GameBoardInformation.IsLargeGame ? randomizer.NextDouble() <= 0.7 : true)))
                     {
                         // Add a single gamestate
                         GameState child = null;
@@ -460,7 +460,7 @@ public class GameState
         }
     }
 
-
+    private static System.Random randomizer = new System.Random();
     private void EvaluateHeuristicAsLeaf()
     {
         Piece winner = Winner();
@@ -468,7 +468,21 @@ public class GameState
         else if (winner == Piece.BLACKQUEEN) HeuristicValue = double.NegativeInfinity;
         else
         {
-            HeuristicValue = TerritorialMobility(WhiteQueens, BlackQueens, BurnedTiles);
+            if (GameBoardInformation.IsLargeGame)
+            {
+                if (depth <= GameBoardInformation.ModerateMoves)
+                {
+                    HeuristicValue = FastEvaluation(WhiteQueens, BlackQueens, BurnedTiles);
+                }
+                else
+                {
+                    HeuristicValue = TerritorialMobility(WhiteQueens, BlackQueens, BurnedTiles);
+                }
+            }
+            else
+            {
+                HeuristicValue = TerritorialMobility(WhiteQueens, BlackQueens, BurnedTiles);
+            }
         }
     }
 
@@ -480,7 +494,7 @@ public class GameState
         Tuple<int, int> tmp = GetAmountOfPossibleMovesForBothParties(whiteQueens, blackQueens, burnedTiles);
         int whiteMoves = tmp.Item1;
         int blackMoves = tmp.Item2;
-        return 0.65 * whiteMoves - 0.35 * blackMoves;
+        return 0.5 * whiteMoves - 0.5 * blackMoves;
     }
 
     public static Tuple<int, int> GetAmountOfPossibleMovesForBothParties(HashSet<Indices> whiteQueens, HashSet<Indices> blackQueens, HashSet<Indices> burnedTiles)
@@ -998,23 +1012,27 @@ public sealed class AILogic : PlayerLogic
         // explore the tree
         if (currentState.depth >= GameBoardInformation.VeryLateInTheGame)
         {
-            TechnicalStatistics.LocalDepth = 3;
-            currentState.ExpandDFS(3);
+            int d = 3;
+            TechnicalStatistics.LocalDepth = d;
+            currentState.ExpandDFS(d);
         }
         if (currentState.depth >= GameBoardInformation.ManyMoves)
         {
-            TechnicalStatistics.LocalDepth = 3;
-            currentState.ExpandDFS(3);
+            int d = 2;
+            TechnicalStatistics.LocalDepth = d;
+            currentState.ExpandDFS(d);
         }
         else if (currentState.depth >= GameBoardInformation.ModerateMoves)
         {
-            TechnicalStatistics.LocalDepth = 2;
-            currentState.ExpandDFS(2);
+            int d = RandomBetweenOneAndTwo;
+            TechnicalStatistics.LocalDepth = d;
+            currentState.ExpandDFS(d);
         }
         else
         {
-            TechnicalStatistics.LocalDepth = 1;
-            currentState.Expand();
+            int d = 1;
+            TechnicalStatistics.LocalDepth = d;
+            currentState.ExpandDFS(d);
         }
 
         // play your move

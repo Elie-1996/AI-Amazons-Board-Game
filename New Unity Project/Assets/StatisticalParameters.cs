@@ -18,9 +18,11 @@ public static class TechnicalStatistics
     public static int MaxConcurrentThreads = 1;
     public static string LastMoveString = "";
     public static double totalTimePassed = 0.0;
+    public static double timePassedLastTime = 50.0;
 
     public static string GetLastMoveString(GameState state, double seconds)
     {
+        timePassedLastTime = seconds;
         string str = "";
         str += state.parentAndMove.Item2.ToPrintableString();
         str += "/" + string.Format("{0:0.00}", StateEvaluation(state));
@@ -70,8 +72,8 @@ public class StatisticalParameters : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        TimeLeft.text = "Time Left: " + (InitializingParameters.time - TechnicalStatistics.totalTimePassed) + "sec"; // TODO: actually update
-        LastMove.text = "Move: " + TechnicalStatistics.LastMoveString; // TODO: actually update
+        TimeLeft.text = "Time Left: " + (InitializingParameters.time - TechnicalStatistics.totalTimePassed) + "sec";
+        LastMove.text = "Move: " + TechnicalStatistics.LastMoveString;
         TreeDepth.text = "Total Tree Depth: " + TechnicalStatistics.TotalDepth;
         LocalDepth.text = "Local Tree Depth: " + TechnicalStatistics.LocalDepth;
         AlphaBetaPruning.text = "Alpha Beta Pruning: " + TechnicalStatistics.AlphaBetaPruning;
