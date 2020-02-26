@@ -92,6 +92,7 @@ public class StatisticalParameters : MonoBehaviour
     public Text TotalNodesIgnored;
     public Text HeuristicValue;
     public Text UltimateValue;
+    public Text WinnerValue;
 
     // Start is called before the first frame update
     void Start()
@@ -109,6 +110,8 @@ public class StatisticalParameters : MonoBehaviour
         TotalNodesIgnored.text = "Nodes Created+Ignored: ";
         HeuristicValue.text = "The Main Heuristic: ";
         UltimateValue.text = "The Best Heuristic: ";
+        WinnerValue.text = "Winner: ";
+        WinnerValue.transform.localScale = new Vector3(0, 0, 0);
     }
 
     // Update is called once per frame
@@ -127,6 +130,10 @@ public class StatisticalParameters : MonoBehaviour
         TotalNodesIgnored.text = "Nodes Created+Ignored: " + TechnicalStatistics.TotalWouldBeNodes;
         HeuristicValue.text = "The Main Variant: " + string.Format("{0:0.00}", TechnicalStatistics.LastHeuristic);
         UltimateValue.text = "The Best Heuristic: " + string.Format("{0:0.00}", TechnicalStatistics.UltimateHeuristic);
+        Piece Winner = GameBoardInformation.GetWinner();
+        WinnerValue.text = "Winner: " + Winner;
+        if (Winner != Piece.EMPTY)
+            WinnerValue.transform.localScale = new Vector3(1, 1, 1);
     }
 }
 
@@ -139,6 +146,7 @@ public static class WriteTextFile
     // all the moves to the files
     public static void Write()
     {
+        MoveList.Add("Winner: " + GameBoardInformation.GetWinner());
         string[] lines = MoveList.ToArray();
         System.IO.File.WriteAllLines(@".\GameMoves.txt", lines);
     }
