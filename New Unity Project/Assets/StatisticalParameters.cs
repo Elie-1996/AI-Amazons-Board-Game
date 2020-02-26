@@ -39,6 +39,42 @@ public static class TechnicalStatistics
         int black = tmp.Item2;
         return 0.5*(white - black);
     }
+
+    public static string ParametersAsText()
+    {
+        string str = "";
+        str += "----------------------------------------------------";
+        str += "\n";
+        str += "Move #" + GameTree.head.depth;
+        str += "\n";
+        str += "Time Left: " + string.Format("{0:0.00}", (InitializingParameters.time - TechnicalStatistics.totalTimePassed)) + "sec";
+        str += "\n";
+        str += "Move: " + TechnicalStatistics.LastMoveString;
+        str += "\n";
+        str += "Total Tree Depth: " + TechnicalStatistics.TotalDepth;
+        str += "\n";
+        str += "Local Tree Depth: " + TechnicalStatistics.LocalDepth;
+        str += "\n";
+        str += "Alpha Beta Pruning: " + TechnicalStatistics.AlphaBetaPruning;
+        str += "\n";
+        str += "Sibling Pruning Percentage: " + string.Format("{0:0.00}", 100.0 * (((double)TechnicalStatistics.PrunedSiblings) / TechnicalStatistics.TotalWouldBeNodes)) + "%";
+        str += "\n";
+        str += "Depth Pruning Percentage: " + string.Format("{0:0.00}", 100.0 * (((double)TechnicalStatistics.PrunedDepth) / TechnicalStatistics.TotalWouldBeNodes)) + "%";
+        str += "\n";
+        str += "All Threads Opened (In Last Move): " + TechnicalStatistics.ThreadAmount;
+        str += "\n";
+        str += "Concurrent Threads Opened (In Last Move): " + TechnicalStatistics.MaxConcurrentThreads;
+        str += "\n";
+        str += "Nodes Created: " + TechnicalStatistics.TotalCreatedNodes;
+        str += "\n";
+        str += "Nodes Created+Ignored: " + TechnicalStatistics.TotalWouldBeNodes;
+        str += "\n";
+        str += "The Main Variant: " + string.Format("{0:0.00}", TechnicalStatistics.LastHeuristic);
+        str += "\n";
+        str += "The Best Heuristic: " + string.Format("{0:0.00}", TechnicalStatistics.UltimateHeuristic);
+        str += "\n";
+        return str;
+    }
 }
 
 public class StatisticalParameters : MonoBehaviour
@@ -91,5 +127,26 @@ public class StatisticalParameters : MonoBehaviour
         TotalNodesIgnored.text = "Nodes Created+Ignored: " + TechnicalStatistics.TotalWouldBeNodes;
         HeuristicValue.text = "The Main Variant: " + string.Format("{0:0.00}", TechnicalStatistics.LastHeuristic);
         UltimateValue.text = "The Best Heuristic: " + string.Format("{0:0.00}", TechnicalStatistics.UltimateHeuristic);
+    }
+}
+
+
+public static class WriteTextFile
+{
+    private static List<string> MoveList = new List<string>();
+
+    // this function should be called only at the end of the game, where it will write
+    // all the moves to the files
+    public static void Write()
+    {
+        string[] lines = MoveList.ToArray();
+        System.IO.File.WriteAllLines(@".\GameMoves.txt", lines);
+    }
+
+    // this function should be called at the end of every move, and AFTER all TechnicalStatistics have been updated, otherwise it will not output correct values
+    public static void AddMove()
+    {
+        string str = TechnicalStatistics.ParametersAsText();
+        MoveList.Add(str);
     }
 }

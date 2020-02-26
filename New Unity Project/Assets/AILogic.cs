@@ -989,7 +989,6 @@ public sealed class AILogic : PlayerLogic
         TechnicalStatistics.ThreadAmount = 1;
         TechnicalStatistics.MaxConcurrentThreads = 1;
         TechnicalStatistics.LocalDepth = 0;
-        // TODO: Hello
         stopWatch.Start();
         lastMove = ThinkThenDecide();
         stopWatch.Stop();

@@ -26,11 +26,9 @@ public class GameLogic : MonoBehaviour
     // Start is executed once
     void Start()
     {
-        // TODO: rows and columns should be input later on
         int rows = InitializingParameters.rows;
         int columns = InitializingParameters.columns;
-
-        // TODO: WhiteQueens and BlackQueens should be input later on
+        
         List<Indices> WhiteQueens = InitializingParameters.WhiteQueens;
         List<Indices> BlackQueens = InitializingParameters.BlackQueens;
         GameBoardInformation.InitializeBoard(rows, columns, WhiteQueens, BlackQueens);
@@ -69,6 +67,7 @@ public class GameLogic : MonoBehaviour
         StartCoroutine(player2.PlayTurn());
         yield return new WaitUntil(() => GameBoardInformation.GetWinner() != Piece.EMPTY);
         Debug.Log("Winner is = " + GameBoardInformation.GetWinner().ToString());
+        WriteTextFile.Write();
         yield return new WaitUntil(() => GameBoardInformation.playAgain == true);
         resetGame(); // TODO: Complete implementation
         yield return Play();

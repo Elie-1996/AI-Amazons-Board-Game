@@ -67,10 +67,9 @@ public class PlayerMove
     }
 }
 
-// Note: Ultimately this is can be the AI.
+
 public abstract class PlayerLogic: MonoBehaviour
 {
-    // TODO: Special Case: at the last 'Move' operation, the player won't have anywhere to 'Burn', so this code will fail.
     public static int totalPlayers = 0; // this will be 2 at the maximum
     public static int globalTurn = 0; // this will fluctuate between 0 and 1
     protected readonly int playerTurnIndex; // this is the player's turn index, it does not change throughout the game
@@ -110,6 +109,11 @@ public abstract class PlayerLogic: MonoBehaviour
             TechnicalStatistics.LastHeuristic = GameTree.head.HeuristicValue;
             TechnicalStatistics.LastMoveString = TechnicalStatistics.GetLastMoveString(GameTree.head, secondsPassed);
             TechnicalStatistics.totalTimePassed += secondsPassed;
+
+            // once we reach here, all the parameters of TechnicalStatistics have been updated properly.
+            // Therefore, we will add this move to our List of moves here.
+            WriteTextFile.AddMove();
+
             GameBoardInformation.updateGameOver();
             globalTurn = (globalTurn + 1) % 2; // increase index to say that it is the other player's turn
             yield return PlayTurn();
