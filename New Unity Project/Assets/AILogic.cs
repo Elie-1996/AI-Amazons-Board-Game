@@ -486,9 +486,6 @@ public class GameState
         }
     }
 
-    // This Heuristic is cancelled, but I am going to keep the code anyways since the project is almost done, and having this as the only spaghetti code isn't such a big deal
-    // The reason it was cancelled is because we were able to achieve a good timing on the other, more accurate heuristic (Territory Mobility).
-    // Despite these comments, it might still prove useful when I introduce *time* as a factor agaist this AI.
     private static double FastEvaluation(HashSet<Indices> whiteQueens, HashSet<Indices> blackQueens, HashSet<Indices> burnedTiles)
     {
         Tuple<int, int> tmp = GetAmountOfPossibleMovesForBothParties(whiteQueens, blackQueens, burnedTiles);
@@ -1035,9 +1032,53 @@ public sealed class AILogic : PlayerLogic
             currentState.ExpandDFS(d);
         }
 
+        //find optimal state - for printing purposes only
+        FindUltimateMove(currentState, currentState);
+
         // play your move
         GameState playState = FindBestMove();
         return playState.parentAndMove.Item2;
+    }
+
+    private static void FindUltimateMove(GameState currentState, GameState latestState)
+    {
+        if (latestState == null) return;
+        if (currentState == null)
+        {
+            TechnicalStatistics.UltimateHeuristic = latestState.HeuristicValue;
+            return;
+        }
+
+        HashSet<GameState> children = currentState.Children;
+
+        if (currentState.isWhiteTurn)
+        {
+            GameState highestState = null;
+            double highestHeuristic = double.NegativeInfinity;
+            foreach (GameState child in children)
+            {
+                if (child.HeuristicValue > highestHeuristic)
+                {
+                    highestHeuristic = child.HeuristicValue;
+                    highestState = child;
+                }
+            }
+            FindUltimateMove(highestState, currentState);
+        }
+        else
+        {
+            GameState lowestState = null;
+            double lowestHeuristic = double.PositiveInfinity;
+            foreach (GameState child in children)
+            {
+                if (child.HeuristicValue < lowestHeuristic)
+                {
+                    lowestHeuristic = child.HeuristicValue;
+                    lowestState = child;
+                }
+            }
+            FindUltimateMove(lowestState, currentState);
+        }
     }
 
     private GameState FindBestMove()

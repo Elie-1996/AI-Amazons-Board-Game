@@ -105,9 +105,9 @@ public abstract class PlayerLogic: MonoBehaviour
             StartCoroutine(MakeMove()); // This is where the player will actually perform the move.
             yield return new WaitUntil(() => finishedMove == true);
 
-
             finishedMove = false; // resets to false, to allow the player to play again
             GameTree.UpdateGameStateAndTree(lastMove);
+            TechnicalStatistics.LastHeuristic = GameTree.head.HeuristicValue;
             TechnicalStatistics.LastMoveString = TechnicalStatistics.GetLastMoveString(GameTree.head, secondsPassed);
             TechnicalStatistics.totalTimePassed += secondsPassed;
             GameBoardInformation.updateGameOver();

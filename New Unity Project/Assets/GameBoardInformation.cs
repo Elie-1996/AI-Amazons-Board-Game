@@ -67,7 +67,6 @@ public static class GameBoardInformation
                 result = 0.1;
         }
         else result = -0.012 * x + 1.16;
-        Debug.Log("res(" + x + ")=" + result);
         return result;
     }
 

@@ -19,6 +19,8 @@ public static class TechnicalStatistics
     public static string LastMoveString = "";
     public static double totalTimePassed = 0.0;
     public static double timePassedLastTime = 50.0;
+    public static double LastHeuristic = 0.0;
+    public static double UltimateHeuristic = 0.0;
 
     public static string GetLastMoveString(GameState state, double seconds)
     {
@@ -52,6 +54,8 @@ public class StatisticalParameters : MonoBehaviour
     public Text ConcurrentThreads;
     public Text TotalNodesCreated;
     public Text TotalNodesIgnored;
+    public Text HeuristicValue;
+    public Text UltimateValue;
 
     // Start is called before the first frame update
     void Start()
@@ -67,12 +71,14 @@ public class StatisticalParameters : MonoBehaviour
         ConcurrentThreads.text = "Concurrent Threads Opened (In Last Move): ";
         TotalNodesCreated.text = "Nodes Created: ";
         TotalNodesIgnored.text = "Nodes Created+Ignored: ";
+        HeuristicValue.text = "The Main Heuristic: ";
+        UltimateValue.text = "The Best Heuristic: ";
     }
 
     // Update is called once per frame
     void Update()
     {
-        TimeLeft.text = "Time Left: " + (InitializingParameters.time - TechnicalStatistics.totalTimePassed) + "sec";
+        TimeLeft.text = "Time Left: " + string.Format("{0:0.00}", (InitializingParameters.time - TechnicalStatistics.totalTimePassed)) + "sec";
         LastMove.text = "Move: " + TechnicalStatistics.LastMoveString;
         TreeDepth.text = "Total Tree Depth: " + TechnicalStatistics.TotalDepth;
         LocalDepth.text = "Local Tree Depth: " + TechnicalStatistics.LocalDepth;
@@ -83,5 +89,7 @@ public class StatisticalParameters : MonoBehaviour
         ConcurrentThreads.text = "Concurrent Threads Opened (In Last Move): " + TechnicalStatistics.MaxConcurrentThreads;
         TotalNodesCreated.text = "Nodes Created: " + TechnicalStatistics.TotalCreatedNodes;
         TotalNodesIgnored.text = "Nodes Created+Ignored: " + TechnicalStatistics.TotalWouldBeNodes;
+        HeuristicValue.text = "The Main Variant: " + string.Format("{0:0.00}", TechnicalStatistics.LastHeuristic);
+        UltimateValue.text = "The Best Heuristic: " + string.Format("{0:0.00}", TechnicalStatistics.UltimateHeuristic);
     }
 }
