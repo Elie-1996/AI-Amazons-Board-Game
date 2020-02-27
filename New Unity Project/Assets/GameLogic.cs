@@ -67,7 +67,7 @@ public class GameLogic : MonoBehaviour
         StartCoroutine(player2.PlayTurn());
         yield return new WaitUntil(() => GameBoardInformation.GetWinner() != Piece.EMPTY);
         Debug.Log("Winner is = " + GameBoardInformation.GetWinner().ToString());
-        WriteTextFile.Write();
+        //WriteTextFile.Write();
         yield return new WaitUntil(() => GameBoardInformation.playAgain == true);
         resetGame(); // TODO: Complete implementation
         yield return Play();

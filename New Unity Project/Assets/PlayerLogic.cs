@@ -97,6 +97,7 @@ public abstract class PlayerLogic: MonoBehaviour
         yield return new WaitUntil(() => playerTurnIndex == globalTurn); // only play when it is the current player's turn
         if (GameBoardInformation.isGameOver == true)
         {
+            WriteTextFile.Write();
             yield break;
         }
         else

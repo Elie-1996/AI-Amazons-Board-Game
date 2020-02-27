@@ -1,401 +1,67 @@
+6x6
+
 ----------------------------------------------------
 Move #1
-Time Left: 298.11sec
-Move: F2-E2/C2/4.50/1.89
+Time Left: 1.88sec
+Move: A3-B3/E0/-1.50/1.12
 Total Tree Depth: 0
 Local Tree Depth: 1
 Alpha Beta Pruning: 0
-Sibling Pruning Percentage: 29.65%
+Sibling Pruning Percentage: 27.76%
 Depth Pruning Percentage: 0.00%
-All Threads Opened (In Last Move): 1791
+All Threads Opened (In Last Move): 1839
 Concurrent Threads Opened (In Last Move): 7
-Nodes Created: 299
+Nodes Created: 307
 Nodes Created+Ignored: 425
-The Main Variant: 3.41
-The Best Heuristic: 3.41
+The Variant Estimate: 2.91
+The Principal Variation: 2.91
 
 ----------------------------------------------------
 Move #2
-Time Left: 296.88sec
-Move: C0-C1/A1/0.00/1.23
+Time Left: 0.96sec
+Move: C0-C1/C3/1.50/0.92
 Total Tree Depth: 1
 Local Tree Depth: 1
 Alpha Beta Pruning: 0
-Sibling Pruning Percentage: 28.75%
+Sibling Pruning Percentage: 27.33%
 Depth Pruning Percentage: 0.00%
-All Threads Opened (In Last Move): 1227
+All Threads Opened (In Last Move): 1533
 Concurrent Threads Opened (In Last Move): 7
-Nodes Created: 503
-Nodes Created+Ignored: 706
-The Main Variant: -0.70
-The Best Heuristic: -0.70
+Nodes Created: 562
+Nodes Created+Ignored: 772
+The Variant Estimate: -1.62
+The Principal Variation: -1.62
 
 ----------------------------------------------------
 Move #3
-Time Left: 295.73sec
-Move: A3-B4/B0/-1.00/1.15
+Time Left: 0.34sec
+Move: F2-E3/E5/0.00/0.62
 Total Tree Depth: 2
 Local Tree Depth: 1
 Alpha Beta Pruning: 0
-Sibling Pruning Percentage: 29.42%
-Depth Pruning Percentage: 0.00%
-All Threads Opened (In Last Move): 1245
-Concurrent Threads Opened (In Last Move): 7
-Nodes Created: 710
-Nodes Created+Ignored: 1006
-The Main Variant: 3.50
-The Best Heuristic: 3.50
-
-----------------------------------------------------
-Move #4
-Time Left: 294.80sec
-Move: D5-D4/F2/0.50/0.93
-Total Tree Depth: 3
-Local Tree Depth: 1
-Alpha Beta Pruning: 0
-Sibling Pruning Percentage: 30.25%
-Depth Pruning Percentage: 0.00%
-All Threads Opened (In Last Move): 1083
-Concurrent Threads Opened (In Last Move): 7
-Nodes Created: 890
-Nodes Created+Ignored: 1276
-The Main Variant: 2.18
-The Best Heuristic: 2.18
-
-----------------------------------------------------
-Move #5
-Time Left: 293.95sec
-Move: E2-D1/D3/0.00/0.84
-Total Tree Depth: 4
-Local Tree Depth: 1
-Alpha Beta Pruning: 0
-Sibling Pruning Percentage: 29.84%
+Sibling Pruning Percentage: 29.71%
 Depth Pruning Percentage: 0.00%
 All Threads Opened (In Last Move): 1137
 Concurrent Threads Opened (In Last Move): 7
-Nodes Created: 1079
-Nodes Created+Ignored: 1538
-The Main Variant: 2.84
-The Best Heuristic: 2.84
+Nodes Created: 751
+Nodes Created+Ignored: 1067
+The Variant Estimate: 2.70
+The Principal Variation: 2.70
 
 ----------------------------------------------------
-Move #6
-Time Left: 293.47sec
-Move: D4-C4/C5/0.00/0.48
-Total Tree Depth: 5
+Move #4
+Time Left: -0.27sec
+Move: D5-C4/A4/-0.50/0.61
+Total Tree Depth: 3
 Local Tree Depth: 1
 Alpha Beta Pruning: 0
-Sibling Pruning Percentage: 29.69%
+Sibling Pruning Percentage: 30.01%
 Depth Pruning Percentage: 0.00%
-All Threads Opened (In Last Move): 633
+All Threads Opened (In Last Move): 1059
 Concurrent Threads Opened (In Last Move): 7
-Nodes Created: 1184
-Nodes Created+Ignored: 1684
-The Main Variant: 2.33
-The Best Heuristic: 2.33
+Nodes Created: 927
+Nodes Created+Ignored: 1323
+The Variant Estimate: 0.82
+The Principal Variation: 0.82
 
-----------------------------------------------------
-Move #7
-Time Left: 292.92sec
-Move: D1-E2/C0/-2.00/0.55
-Total Tree Depth: 6
-Local Tree Depth: 1
-Alpha Beta Pruning: 0
-Sibling Pruning Percentage: 29.77%
-Depth Pruning Percentage: 0.00%
-All Threads Opened (In Last Move): 657
-Concurrent Threads Opened (In Last Move): 7
-Nodes Created: 1293
-Nodes Created+Ignored: 1841
-The Main Variant: 2.37
-The Best Heuristic: 2.37
-
-----------------------------------------------------
-Move #8
-Time Left: 281.89sec
-Move: C1-E1/F1/-3.00/11.03
-Total Tree Depth: 7
-Local Tree Depth: 2
-Alpha Beta Pruning: 3125
-Sibling Pruning Percentage: 29.65%
-Depth Pruning Percentage: 0.42%
-All Threads Opened (In Last Move): 19812
-Concurrent Threads Opened (In Last Move): 16
-Nodes Created: 4642
-Nodes Created+Ignored: 6598
-The Main Variant: 1.19
-The Best Heuristic: 1.19
-
-----------------------------------------------------
-Move #9
-Time Left: 272.44sec
-Move: E2-E4/D4/-3.00/9.45
-Total Tree Depth: 8
-Local Tree Depth: 2
-Alpha Beta Pruning: 5653
-Sibling Pruning Percentage: 29.67%
-Depth Pruning Percentage: 0.49%
-All Threads Opened (In Last Move): 16341
-Concurrent Threads Opened (In Last Move): 17
-Nodes Created: 7409
-Nodes Created+Ignored: 10534
-The Main Variant: 1.95
-The Best Heuristic: 1.95
-
-----------------------------------------------------
-Move #10
-Time Left: 272.10sec
-Move: C4-B3/A3/-4.50/0.34
-Total Tree Depth: 9
-Local Tree Depth: 1
-Alpha Beta Pruning: 5653
-Sibling Pruning Percentage: 29.69%
-Depth Pruning Percentage: 0.49%
-All Threads Opened (In Last Move): 411
-Concurrent Threads Opened (In Last Move): 9
-Nodes Created: 7477
-Nodes Created+Ignored: 10634
-The Main Variant: -0.07
-The Best Heuristic: -0.07
-
-----------------------------------------------------
-Move #11
-Time Left: 271.85sec
-Move: B4-C3/C4/-2.00/0.25
-Total Tree Depth: 10
-Local Tree Depth: 1
-Alpha Beta Pruning: 5653
-Sibling Pruning Percentage: 29.64%
-Depth Pruning Percentage: 0.49%
-All Threads Opened (In Last Move): 351
-Concurrent Threads Opened (In Last Move): 9
-Nodes Created: 7535
-Nodes Created+Ignored: 10709
-The Main Variant: 0.98
-The Best Heuristic: 0.98
-
-----------------------------------------------------
-Move #12
-Time Left: 271.68sec
-Move: E1-D2/E3/0.00/0.17
-Total Tree Depth: 11
-Local Tree Depth: 1
-Alpha Beta Pruning: 5653
-Sibling Pruning Percentage: 29.70%
-Depth Pruning Percentage: 0.48%
-All Threads Opened (In Last Move): 363
-Concurrent Threads Opened (In Last Move): 9
-Nodes Created: 7595
-Nodes Created+Ignored: 10803
-The Main Variant: -2.62
-The Best Heuristic: -2.62
-
-----------------------------------------------------
-Move #13
-Time Left: 271.60sec
-Move: C3-B2/C3/-0.50/0.07
-Total Tree Depth: 12
-Local Tree Depth: 1
-Alpha Beta Pruning: 5653
-Sibling Pruning Percentage: 29.69%
-Depth Pruning Percentage: 0.48%
-All Threads Opened (In Last Move): 159
-Concurrent Threads Opened (In Last Move): 9
-Nodes Created: 7621
-Nodes Created+Ignored: 10839
-The Main Variant: 3.46
-The Best Heuristic: 3.46
-
-----------------------------------------------------
-Move #14
-Time Left: 270.54sec
-Move: D2-C1/B1/-1.50/1.06
-Total Tree Depth: 13
-Local Tree Depth: 2
-Alpha Beta Pruning: 6035
-Sibling Pruning Percentage: 29.68%
-Depth Pruning Percentage: 0.53%
-All Threads Opened (In Last Move): 2709
-Concurrent Threads Opened (In Last Move): 16
-Nodes Created: 8088
-Nodes Created+Ignored: 11502
-The Main Variant: 0.70
-The Best Heuristic: 0.70
-
-----------------------------------------------------
-Move #15
-Time Left: 269.70sec
-Move: E4-F3/E2/-0.50/0.84
-Total Tree Depth: 14
-Local Tree Depth: 2
-Alpha Beta Pruning: 6199
-Sibling Pruning Percentage: 29.53%
-Depth Pruning Percentage: 0.55%
-All Threads Opened (In Last Move): 1869
-Concurrent Threads Opened (In Last Move): 13
-Nodes Created: 8409
-Nodes Created+Ignored: 11932
-The Main Variant: 2.66
-The Best Heuristic: 2.66
-
-----------------------------------------------------
-Move #16
-Time Left: 269.10sec
-Move: C1-D2/D0/0.00/0.60
-Total Tree Depth: 15
-Local Tree Depth: 2
-Alpha Beta Pruning: 6494
-Sibling Pruning Percentage: 29.53%
-Depth Pruning Percentage: 0.53%
-All Threads Opened (In Last Move): 1849
-Concurrent Threads Opened (In Last Move): 78
-Nodes Created: 8704
-Nodes Created+Ignored: 12351
-The Main Variant: 6.48
-The Best Heuristic: 6.48
-
-----------------------------------------------------
-Move #17
-Time Left: 268.69sec
-Move: B2-A2/B2/0.00/0.41
-Total Tree Depth: 16
-Local Tree Depth: 2
-Alpha Beta Pruning: 6672
-Sibling Pruning Percentage: 29.53%
-Depth Pruning Percentage: 0.52%
-All Threads Opened (In Last Move): 1104
-Concurrent Threads Opened (In Last Move): 41
-Nodes Created: 8882
-Nodes Created+Ignored: 12604
-The Main Variant: 4.65
-The Best Heuristic: 4.65
-
-----------------------------------------------------
-Move #18
-Time Left: 268.34sec
-Move: D2-C1/D2/-0.50/0.35
-Total Tree Depth: 17
-Local Tree Depth: 2
-Alpha Beta Pruning: 6823
-Sibling Pruning Percentage: 29.47%
-Depth Pruning Percentage: 0.52%
-All Threads Opened (In Last Move): 957
-Concurrent Threads Opened (In Last Move): 40
-Nodes Created: 9033
-Nodes Created+Ignored: 12808
-The Main Variant: 6.53
-The Best Heuristic: 5.60
-
-----------------------------------------------------
-Move #19
-Time Left: 268.18sec
-Move: F3-E4/D5/-0.50/0.15
-Total Tree Depth: 18
-Local Tree Depth: 2
-Alpha Beta Pruning: 6915
-Sibling Pruning Percentage: 29.42%
-Depth Pruning Percentage: 0.51%
-All Threads Opened (In Last Move): 580
-Concurrent Threads Opened (In Last Move): 30
-Nodes Created: 9125
-Nodes Created+Ignored: 12928
-The Main Variant: 3.77
-The Best Heuristic: 3.77
-
-----------------------------------------------------
-Move #20
-Time Left: 268.05sec
-Move: C1-D1/E0/-0.50/0.13
-Total Tree Depth: 19
-Local Tree Depth: 2
-Alpha Beta Pruning: 6993
-Sibling Pruning Percentage: 29.33%
-Depth Pruning Percentage: 0.51%
-All Threads Opened (In Last Move): 505
-Concurrent Threads Opened (In Last Move): 29
-Nodes Created: 9204
-Nodes Created+Ignored: 13024
-The Main Variant: 5.65
-The Best Heuristic: 4.65
-
-----------------------------------------------------
-Move #21
-Time Left: 267.87sec
-Move: E4-F4/E5/-0.50/0.18
-Total Tree Depth: 20
-Local Tree Depth: 2
-Alpha Beta Pruning: 7063
-Sibling Pruning Percentage: 29.31%
-Depth Pruning Percentage: 0.50%
-All Threads Opened (In Last Move): 445
-Concurrent Threads Opened (In Last Move): 28
-Nodes Created: 9274
-Nodes Created+Ignored: 13120
-The Main Variant: 2.82
-The Best Heuristic: 2.82
-
-----------------------------------------------------
-Move #22
-Time Left: 267.78sec
-Move: B3-A4/B3/-1.00/0.09
-Total Tree Depth: 21
-Local Tree Depth: 2
-Alpha Beta Pruning: 7111
-Sibling Pruning Percentage: 29.29%
-Depth Pruning Percentage: 0.50%
-All Threads Opened (In Last Move): 319
-Concurrent Threads Opened (In Last Move): 28
-Nodes Created: 9322
-Nodes Created+Ignored: 13184
-The Main Variant: 4.70
-The Best Heuristic: 3.70
-
-----------------------------------------------------
-Move #23
-Time Left: 267.73sec
-Move: F4-E4/F4/-1.00/0.06
-Total Tree Depth: 22
-Local Tree Depth: 2
-Alpha Beta Pruning: 7142
-Sibling Pruning Percentage: 29.28%
-Depth Pruning Percentage: 0.50%
-All Threads Opened (In Last Move): 199
-Concurrent Threads Opened (In Last Move): 15
-Nodes Created: 9353
-Nodes Created+Ignored: 13225
-The Main Variant: 3.70
-The Best Heuristic: 3.75
-
-----------------------------------------------------
-Move #24
-Time Left: 267.62sec
-Move: A4-A5/B5/-1.50/0.11
-Total Tree Depth: 23
-Local Tree Depth: 2
-Alpha Beta Pruning: 7198
-Sibling Pruning Percentage: 29.22%
-Depth Pruning Percentage: 0.55%
-All Threads Opened (In Last Move): 397
-Concurrent Threads Opened (In Last Move): 30
-Nodes Created: 9409
-Nodes Created+Ignored: 13293
-The Main Variant: 3.75
-The Best Heuristic: 1.80
-
-----------------------------------------------------
-Move #25
-Time Left: 267.60sec
-Move: E4-F5/E4/-1.00/0.02
-Total Tree Depth: 24
-Local Tree Depth: 2
-Alpha Beta Pruning: 7198
-Sibling Pruning Percentage: 29.22%
-Depth Pruning Percentage: 0.55%
-All Threads Opened (In Last Move): 63
-Concurrent Threads Opened (In Last Move): 9
-Nodes Created: 9409
-Nodes Created+Ignored: 13293
-The Main Variant: 1.80
-The Best Heuristic: 1.80
-
-Winner: BLACKQUEEN
+Time's up! AI Lost.

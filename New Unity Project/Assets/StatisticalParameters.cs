@@ -69,9 +69,9 @@ public static class TechnicalStatistics
         str += "\n";
         str += "Nodes Created+Ignored: " + TechnicalStatistics.TotalWouldBeNodes;
         str += "\n";
-        str += "The Main Variant: " + string.Format("{0:0.00}", TechnicalStatistics.LastHeuristic);
+        str += "The Variant Estimate: " + string.Format("{0:0.00}", TechnicalStatistics.LastHeuristic);
         str += "\n";
-        str += "The Best Heuristic: " + string.Format("{0:0.00}", TechnicalStatistics.UltimateHeuristic);
+        str += "The Principal Variation: " + string.Format("{0:0.00}", TechnicalStatistics.UltimateHeuristic);
         str += "\n";
         return str;
     }
@@ -108,8 +108,8 @@ public class StatisticalParameters : MonoBehaviour
         ConcurrentThreads.text = "Concurrent Threads Opened (In Last Move): ";
         TotalNodesCreated.text = "Nodes Created: ";
         TotalNodesIgnored.text = "Nodes Created+Ignored: ";
-        HeuristicValue.text = "The Main Heuristic: ";
-        UltimateValue.text = "The Best Heuristic: ";
+        HeuristicValue.text = "The Variant Estimate: ";
+        UltimateValue.text = "The Principal Variation: ";
         WinnerValue.text = "Winner: ";
         WinnerValue.transform.localScale = new Vector3(0, 0, 0);
     }
@@ -128,8 +128,8 @@ public class StatisticalParameters : MonoBehaviour
         ConcurrentThreads.text = "Concurrent Threads Opened (In Last Move): " + TechnicalStatistics.MaxConcurrentThreads;
         TotalNodesCreated.text = "Nodes Created: " + TechnicalStatistics.TotalCreatedNodes;
         TotalNodesIgnored.text = "Nodes Created+Ignored: " + TechnicalStatistics.TotalWouldBeNodes;
-        HeuristicValue.text = "The Main Variant: " + string.Format("{0:0.00}", TechnicalStatistics.LastHeuristic);
-        UltimateValue.text = "The Best Heuristic: " + string.Format("{0:0.00}", TechnicalStatistics.UltimateHeuristic);
+        HeuristicValue.text = "The Variant Estimate: " + string.Format("{0:0.00}", TechnicalStatistics.LastHeuristic);
+        UltimateValue.text = "The Principal Variation: " + string.Format("{0:0.00}", TechnicalStatistics.UltimateHeuristic);
         Piece Winner = GameBoardInformation.GetWinner();
         WinnerValue.text = "Winner: " + Winner;
         if (Winner != Piece.EMPTY)
@@ -146,8 +146,22 @@ public static class WriteTextFile
     // all the moves to the files
     public static void Write()
     {
-        MoveList.Add("Winner: " + GameBoardInformation.GetWinner());
-        string[] lines = MoveList.ToArray();
+        Piece winner = GameBoardInformation.GetWinner();
+        if (winner != Piece.EMPTY)
+        {
+            MoveList.Add("Winner: " + winner);
+        }
+        else
+        {
+            MoveList.Add("Time's up! AI Lost.");
+        }
+        List<string> text = new List<string>();
+        text.Add(GameBoardInformation.rows + "x" + GameBoardInformation.columns + "\n");
+        foreach (string str in MoveList)
+        {
+            text.Add(str);
+        }
+        string[] lines = text.ToArray();
         System.IO.File.WriteAllLines(@".\GameMoves.txt", lines);
     }
 

@@ -400,7 +400,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 'The Best Heuristic: -2.0'
+  m_Text: 'ThePrincipal Variation: -2.0'
 --- !u!222 &662794738
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -587,7 +587,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 'The Main Variant: 12.50'
+  m_Text: 'The Variant Estimate: 12.50'
 --- !u!222 &720226519
 CanvasRenderer:
   m_ObjectHideFlags: 0
